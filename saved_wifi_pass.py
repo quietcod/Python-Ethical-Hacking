@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # """This script retrieves saved WiFi passwords from a Windows machine and emails them."""
 
