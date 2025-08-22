@@ -7,6 +7,25 @@ Date: 2025-08-18
 
 A comprehensive reconnaissance wrapper that integrates multiple scanning tools
 and generates detailed reports for penetration testing and security assessments.
+
+Features:
+    • Port Scanning (Nmap, Masscan, Hybrid)
+    • Subdomain Enumeration (multi-tool, DNSSEC, zone transfer)
+    • Web Application Scanning (Nikto, tech stack, CMS, API fuzzing)
+    • SSL/TLS Analysis (Heartbleed, POODLE, BEAST, DROWN, weak ciphers)
+    • OSINT Collection (DNS, Wayback Machine, GitHub dorking)
+    • Screenshot Capture
+    • Advanced Directory Discovery (gobuster, ffuf, feroxbuster)
+    • Vulnerability Scanning (CVE mapping, vulners, vulscan)
+    • Risk Scoring and Assessment (CVSS v3.1)
+    • Compliance Mapping (OWASP Top 10, NIST, PCI DSS, ISO27001)
+    • Multi-format Reporting (CSV, Excel, Word, PPTX, PDF)
+    • Historical Baseline Tracking
+    • Evidence Collection (screenshots, packets, logs)
+    • API Endpoint Discovery and Fuzzing
+    • Technology Stack Detection (Wappalyzer-style)
+    • Advanced Error Handling and Fallbacks
+    • Production-ready for authorized security testing
 """
 
 import argparse
@@ -307,7 +326,6 @@ class ConfigManager:
             },
             "reporting": {
                 "advanced_enabled": True,
-                "generate_dashboard": True,
                 "generate_pdf": True,
                 "generate_risk_assessment": True,
                 "generate_compliance": True,
@@ -331,7 +349,7 @@ class ConfigManager:
                 "technical_details": True,
                 "visualization": {
                     "charts": True,
-                    "interactive": True,
+                    "interactive": False,
                     "export_images": False
                 }
             }
@@ -5803,27 +5821,23 @@ class AdvancedReportGenerator:
             # Generate reports
             reports_generated = []
             
-            # 1. Enhanced Interactive HTML Dashboard
-            if self._generate_enhanced_dashboard(risk_assessment, compliance_status):
-                reports_generated.append('Interactive HTML Dashboard')
-                
-            # 2. Executive Summary PDF
+            # 1. Executive Summary PDF
             if self._generate_executive_pdf(risk_assessment):
                 reports_generated.append('Executive PDF')
                 
-            # 3. Technical Report PDF
+            # 2. Technical Report PDF
             if self._generate_technical_pdf(risk_assessment):
                 reports_generated.append('Technical PDF')
                 
-            # 4. Risk Assessment with CVSS scores
+            # 3. Risk Assessment with CVSS scores
             if self._generate_enhanced_risk_json(risk_assessment):
                 reports_generated.append('Enhanced Risk Assessment JSON')
                 
-            # 5. Compliance Framework Reports
+            # 4. Compliance Framework Reports
             if self._generate_enhanced_compliance_report(compliance_status):
                 reports_generated.append('Compliance Framework Report')
                 
-            # 6. Multi-format Data Exports
+            # 5. Multi-format Data Exports
             export_results = self._generate_multiformat_exports()
             if export_results:
                 reports_generated.extend(export_results)
@@ -5845,279 +5859,6 @@ class AdvancedReportGenerator:
             self.logger.error(f"Traceback: {traceback.format_exc()}")
             return []
             
-    def _generate_html_dashboard(self, risk_assessment):
-        """Generate interactive HTML dashboard"""
-        try:
-            dashboard_dir = self.output_dir / 'dashboard'
-            dashboard_dir.mkdir(exist_ok=True)
-            
-            # HTML template
-            html_template = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Assessment Dashboard - {{ target }}</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .risk-critical { color: #dc3545; }
-        .risk-high { color: #fd7e14; }
-        .risk-medium { color: #ffc107; }
-        .risk-low { color: #20c997; }
-        .risk-minimal { color: #28a745; }
-        .dashboard-card { margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .metric-value { font-size: 2.5rem; font-weight: bold; }
-        .chart-container { height: 400px; }
-    </style>
-</head>
-<body>
-    <div class="container-fluid">
-        <nav class="navbar navbar-dark bg-dark">
-            <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1">🔍 Security Assessment Dashboard</span>
-                <span class="navbar-text">Target: {{ target }} | {{ scan_date }}</span>
-            </div>
-        </nav>
-        
-        <div class="row mt-4">
-            <!-- Risk Score Card -->
-            <div class="col-md-3">
-                <div class="card dashboard-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Risk Score</h5>
-                        <div class="metric-value risk-{{ risk_level }}">{{ risk_score }}/100</div>
-                        <p class="card-text">Risk Level: <span class="risk-{{ risk_level }}">{{ risk_level|title }}</span></p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Vulnerabilities Card -->
-            <div class="col-md-3">
-                <div class="card dashboard-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Vulnerabilities</h5>
-                        <div class="metric-value text-danger">{{ total_vulnerabilities }}</div>
-                        <p class="card-text">Critical: {{ critical_vulns }} | High: {{ high_vulns }}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Open Ports Card -->
-            <div class="col-md-3">
-                <div class="card dashboard-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Open Ports</h5>
-                        <div class="metric-value text-info">{{ open_ports }}</div>
-                        <p class="card-text">Services Detected</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Subdomains Card -->
-            <div class="col-md-3">
-                <div class="card dashboard-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Subdomains</h5>
-                        <div class="metric-value text-success">{{ subdomains_count }}</div>
-                        <p class="card-text">Discovered</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row">
-            <!-- Risk Breakdown Chart -->
-            <div class="col-md-6">
-                <div class="card dashboard-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Risk Component Breakdown</h5>
-                        <div id="riskChart" class="chart-container"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Vulnerability Distribution Chart -->
-            <div class="col-md-6">
-                <div class="card dashboard-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Vulnerability Severity Distribution</h5>
-                        <div id="vulnChart" class="chart-container"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row">
-            <!-- Port Analysis Chart -->
-            <div class="col-md-6">
-                <div class="card dashboard-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Open Ports Analysis</h5>
-                        <div id="portChart" class="chart-container"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- SSL/TLS Security Chart -->
-            <div class="col-md-6">
-                <div class="card dashboard-card">
-                    <div class="card-body">
-                        <h5 class="card-title">SSL/TLS Security Status</h5>
-                        <div id="sslChart" class="chart-container"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Recommendations Table -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card dashboard-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Priority Recommendations</h5>
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Priority</th>
-                                        <th>Category</th>
-                                        <th>Issue</th>
-                                        <th>Recommendation</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for rec in recommendations %}
-                                    <tr>
-                                        <td><span class="badge bg-{{ 'danger' if rec.priority == 'critical' else 'warning' if rec.priority == 'high' else 'info' }}">{{ rec.priority|title }}</span></td>
-                                        <td>{{ rec.category|replace('_', ' ')|title }}</td>
-                                        <td>{{ rec.title }}</td>
-                                        <td>{{ rec.description }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // Risk Component Breakdown Chart
-        var riskData = [{
-            values: [{{ component_scores.vulnerabilities }}, {{ component_scores.ssl_tls }}, {{ component_scores.network_exposure }}, {{ component_scores.security_config }}],
-            labels: ['Vulnerabilities', 'SSL/TLS', 'Network Exposure', 'Security Config'],
-            type: 'pie',
-            marker: {
-                colors: ['#dc3545', '#fd7e14', '#ffc107', '#17a2b8']
-            }
-        }];
-        Plotly.newPlot('riskChart', riskData);
-        
-        // Vulnerability Severity Distribution
-        var vulnData = [{
-            x: ['Critical', 'High', 'Medium', 'Low'],
-            y: [{{ critical_vulns }}, {{ high_vulns }}, {{ medium_vulns }}, {{ low_vulns }}],
-            type: 'bar',
-            marker: {
-                color: ['#dc3545', '#fd7e14', '#ffc107', '#28a745']
-            }
-        }];
-        Plotly.newPlot('vulnChart', vulnData);
-        
-        // Additional charts would be generated here with real data
-    </script>
-</body>
-</html>
-            """
-            
-            # Prepare template data
-            template_data = self._prepare_dashboard_data(risk_assessment)
-            
-            if HAS_JINJA2:
-                template = Template(html_template)
-                html_content = template.render(**template_data)
-            else:
-                # Simple string replacement fallback
-                html_content = html_template
-                for key, value in template_data.items():
-                    html_content = html_content.replace(f"{{{{ {key} }}}}", str(value))
-            
-            # Save dashboard
-            dashboard_file = dashboard_dir / 'index.html'
-            with open(dashboard_file, 'w') as f:
-                f.write(html_content)
-                
-            self.logger.info(f"HTML dashboard saved to {dashboard_file}")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"HTML dashboard generation failed: {str(e)}")
-            return False
-            
-    def _prepare_dashboard_data(self, risk_assessment):
-        """Prepare data for dashboard template"""
-        data = {
-            'target': self.target,
-            'scan_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'risk_score': int(risk_assessment.get('total_score', 0)),
-            'risk_level': risk_assessment.get('risk_level', 'unknown'),
-            'component_scores': risk_assessment.get('component_scores', {}),
-            'recommendations': risk_assessment.get('recommendations', [])
-        }
-        
-        # Count vulnerabilities
-        vuln_counts = self._count_vulnerabilities()
-        data.update(vuln_counts)
-        
-        # Count open ports
-        data['open_ports'] = self._count_open_ports()
-        
-        # Count subdomains
-        data['subdomains_count'] = len(self.results.get('subdomains', []))
-        
-        return data
-        
-    def _count_vulnerabilities(self):
-        """Count vulnerabilities by severity"""
-        counts = {'total_vulnerabilities': 0, 'critical_vulns': 0, 'high_vulns': 0, 'medium_vulns': 0, 'low_vulns': 0}
-        
-        # Security analysis vulnerabilities
-        security_results = self.results.get('security_analysis', {})
-        ssl_analysis = security_results.get('ssl_analysis', {})
-        
-        for port_data in ssl_analysis.values():
-            vulnerabilities = port_data.get('vulnerabilities', [])
-            for vuln in vulnerabilities:
-                severity = vuln.get('severity', 'low').lower()
-                counts['total_vulnerabilities'] += 1
-                if severity == 'critical':
-                    counts['critical_vulns'] += 1
-                elif severity == 'high':
-                    counts['high_vulns'] += 1
-                elif severity == 'medium':
-                    counts['medium_vulns'] += 1
-                else:
-                    counts['low_vulns'] += 1
-                    
-        return counts
-        
-    def _count_open_ports(self):
-        """Count total open ports"""
-        total_ports = 0
-        nmap_results = self.results.get('nmap', {})
-        hosts = nmap_results.get('hosts', [])
-        
-        for host in hosts:
-            ports = host.get('ports', [])
-            open_ports = [p for p in ports if p.get('state') == 'open']
-            total_ports += len(open_ports)
-            
-        return total_ports
-        
     def _generate_risk_json(self, risk_assessment):
         """Generate detailed risk assessment JSON"""
         try:
@@ -6445,29 +6186,12 @@ class AdvancedReportGenerator:
             return False
             
     def _generate_enhanced_dashboard(self, risk_assessment, compliance_status):
-        """Generate fully interactive HTML dashboard with advanced visualizations and filters"""
-        try:
-            dashboard_dir = self.output_dir / 'dashboard'
-            dashboard_dir.mkdir(exist_ok=True)
-            
-            # Create comprehensive interactive dashboard
-            dashboard_html = self._create_interactive_dashboard(risk_assessment, compliance_status)
-            
-            dashboard_file = dashboard_dir / 'executive_dashboard.html'
-            with open(dashboard_file, 'w') as f:
-                f.write(dashboard_html)
-                
-            # Generate additional interactive assets
-            self._generate_dashboard_assets(dashboard_dir)
-                
-            self.logger.info(f"Interactive HTML dashboard saved to {dashboard_file}")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Interactive dashboard generation failed: {str(e)}")
-            return False
+        """Dashboard generation removed - will be implemented later"""
+        pass
             
     def _create_interactive_dashboard(self, risk_assessment, compliance_status):
+        """Dashboard generation removed - will be implemented later"""
+        pass
         """Create fully interactive HTML dashboard with advanced features"""
         
         # Calculate comprehensive statistics
@@ -6850,15 +6574,10 @@ class AdvancedReportGenerator:
         return html_content
         
     def _get_interactive_dashboard_css(self):
-        """Generate enhanced CSS for interactive dashboard"""
-        return """
-        .dashboard-container { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }
+        """Dashboard CSS removed - will be implemented later"""
+        pass
         
-        .filters-panel {
+    def _generate_advanced_interactive_js(self):
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
         }
@@ -10492,10 +10211,23 @@ def print_banner():
 ╚══════════════════════════════════════════════════════════════╝
 
 🚀 Features:
-  • Port Scanning (Nmap)         • Subdomain Enumeration
-  • Web Application Scanning     • SSL/TLS Analysis  
-  • OSINT Collection            • Screenshot Capture
-  • Multi-format Reporting     • Concurrent Execution
+    • Port Scanning (Nmap, Masscan, Hybrid)
+    • Subdomain Enumeration (multi-tool, DNSSEC, zone transfer)
+    • Web Application Scanning (Nikto, tech stack, CMS, API fuzzing)
+    • SSL/TLS Analysis (Heartbleed, POODLE, BEAST, DROWN, weak ciphers)
+    • OSINT Collection (DNS, Wayback Machine, GitHub dorking)
+    • Screenshot Capture
+    • Advanced Directory Discovery (gobuster, ffuf, feroxbuster)
+    • Vulnerability Scanning (CVE mapping, vulners, vulscan)
+    • Risk Scoring and Assessment (CVSS v3.1)
+    • Compliance Mapping (OWASP Top 10, NIST, PCI DSS, ISO27001)
+    • Multi-format Reporting (CSV, Excel, Word, PPTX, PDF)
+    • Historical Baseline Tracking
+    • Evidence Collection (screenshots, packets, logs)
+    • API Endpoint Discovery and Fuzzing
+    • Technology Stack Detection (Wappalyzer-style)
+    • Advanced Error Handling and Fallbacks
+    • Production-ready for authorized security testing
 
 ⚠️  For authorized testing only! Always get permission first.
 """
@@ -10560,8 +10292,7 @@ Examples:
     parser.add_argument('--security-timeout', type=int, default=30, help='Timeout for security checks (default: 30)')
     
     # Advanced reporting options
-    parser.add_argument('--no-advanced-reports', action='store_true', help='Skip advanced reporting (risk assessment, dashboard, compliance)')
-    parser.add_argument('--no-dashboard', action='store_true', help='Skip HTML dashboard generation')
+    parser.add_argument('--no-advanced-reports', action='store_true', help='Skip advanced reporting (risk assessment, compliance)')
     parser.add_argument('--no-risk-assessment', action='store_true', help='Skip risk scoring and assessment')
     parser.add_argument('--no-compliance', action='store_true', help='Skip compliance framework analysis')
     parser.add_argument('--reports-only', action='store_true', help='Generate only reports (skip scanning)')
@@ -10635,9 +10366,6 @@ Examples:
     if args.no_advanced_reports:
         recon.config.set('reporting', 'advanced_enabled', False)
         print("📊 Advanced reporting disabled")
-    if args.no_dashboard:
-        recon.config.set('reporting', 'generate_dashboard', False)
-        print("🌐 HTML dashboard generation disabled")
     if args.no_risk_assessment:
         recon.config.set('reporting', 'generate_risk_assessment', False)
         recon.config.set('reporting', 'risk_scoring', {'enabled': False})
