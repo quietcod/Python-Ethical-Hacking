@@ -5453,11 +5453,13 @@ def print_banner():
     """Print the application banner"""
     banner = """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                    RECON WRAPPER - ALL-IN-ONE VERSION                       ║
+║                    RECON WRAPPER - ALL-IN-ONE VERSION v2.0                  ║
 ║                   Comprehensive Reconnaissance Toolkit                      ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
+║  Architecture: 77 Components • 11 Scanners • 23 External Tools             ║
 ║  Features: Port Scanning • Subdomain Enum • Web Scanning • SSL Analysis    ║
 ║           OSINT Collection • Screenshots • Advanced Reporting               ║
+║  Modules: Core (34) • Reporting (19) • Infrastructure (24)                 ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
     """
     print(banner)
