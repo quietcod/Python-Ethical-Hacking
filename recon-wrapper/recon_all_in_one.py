@@ -1,12 +1,30 @@
 #!/usr/bin/env python3
 """
-Recon Wrapper - All-in-One Consolidated Version
-Comprehensive Reconnaissance Tool with all modules embedded
-Author: Consolidated from modular version
-Date: 2025-08-18
+Recon Wrapper - Core Functionality Module
+Comprehensive Reconnaissance Tool - Core Scanning Components
+Author: Refactored Architecture
+Date: 2025-08-23
 
-A comprehensive reconnaissance wrapper that integrates multiple scanning tools
-and generates detailed reports for penetration testing and security assessments.
+ARCHITECTURE DISTRIBUTION:
+Core Functionality: 11 scanning classes + 23 external tools = 34 components
+
+CORE SCANNING CLASSES (11):
+    1. PortScanner - Network port scanning and service detection
+    2. SubdomainEnumerator - Subdomain discovery and enumeration  
+    3. WebScanner - Web application vulnerability scanning
+    4. SSLScanner - SSL/TLS security analysis
+    5. OSINTCollector - Open source intelligence gathering
+    6. Screenshotter - Visual reconnaissance capture
+    7. SecurityScanner - Comprehensive security analysis
+    8. VulnerabilityScanner - CVE and vulnerability assessment
+    9. DirectoryScanner - Web directory discovery
+    10. DNSScanner - DNS enumeration and analysis
+    11. NetworkScanner - Network topology mapping
+
+EXTERNAL TOOLS (23):
+    nmap, masscan, gobuster, nikto, sublist3r, amass, ffuf, feroxbuster, sqlmap,
+    dirb, wfuzz, nuclei, httpx, assetfinder, subfinder, waybackpy, shodan-cli,
+    censys-cli, theharvester, recon-ng, burpsuite, zap-cli, testssl
 
 Features:
     • Port Scanning (Nmap, Masscan, Hybrid)
@@ -17,14 +35,8 @@ Features:
     • Screenshot Capture
     • Advanced Directory Discovery (gobuster, ffuf, feroxbuster)
     • Vulnerability Scanning (CVE mapping, vulners, vulscan)
-    • Risk Scoring and Assessment (CVSS v3.1)
-    • Compliance Mapping (OWASP Top 10, NIST, PCI DSS, ISO27001)
-    • Multi-format Reporting (CSV, Excel, Word, PPTX, PDF)
-    • Historical Baseline Tracking
-    • Evidence Collection (screenshots, packets, logs)
-    • API Endpoint Discovery and Fuzzing
-    • Technology Stack Detection (Wappalyzer-style)
-    • Advanced Error Handling and Fallbacks
+    • Network Topology Mapping and Analysis
+    • DNS Security Assessment
     • Production-ready for authorized security testing
 """
 
@@ -50,6 +62,12 @@ import hashlib
 import base64
 from urllib.parse import urlparse, urljoin
 import dns.resolver
+
+# CORE PYTHON LIBRARIES (23 total for Infrastructure Module):
+# argparse, ipaddress, os, sys, json, subprocess, threading, time, csv, datetime, 
+# pathlib, xml, re, requests, logging, concurrent.futures, socket, ssl, hashlib, 
+# base64, urllib, dns, tempfile
+
 try:
     import dns.query
     import dns.zone
@@ -58,46 +76,21 @@ try:
 except ImportError:
     HAS_DNS_QUERY = False
 
-# Advanced reporting dependencies
+# Import reporting functionality from separate module
 try:
-    import plotly.graph_objects as go
-    import plotly.express as px
-    from plotly.subplots import make_subplots
-    import plotly.offline as pyo
-    HAS_PLOTLY = True
+    from recon_report import AdvancedReportGenerator, ReportGenerator
+    HAS_REPORTING = True
 except ImportError:
-    HAS_PLOTLY = False
+    HAS_REPORTING = False
+    print("Warning: Reporting module not found. Report generation will be disabled.")
 
+# Import the main ReconWrapper class  
 try:
-    from jinja2 import Template, Environment, FileSystemLoader
-    HAS_JINJA2 = True
+    from recon_wrapper_class import ReconWrapper
+    HAS_RECON_WRAPPER = True
 except ImportError:
-    HAS_JINJA2 = False
-
-try:
-    import sqlite3
-    HAS_SQLITE = True
-except ImportError:
-    HAS_SQLITE = False
-
-try:
-    from reportlab.lib.pagesizes import letter, A4
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.lib import colors
-    from reportlab.graphics.shapes import Drawing
-    from reportlab.graphics.charts.piecharts import Pie
-    from reportlab.graphics.charts.barcharts import VerticalBarChart
-    HAS_REPORTLAB = True
-except ImportError:
-    HAS_REPORTLAB = False
-
-try:
-    import weasyprint
-    HAS_WEASYPRINT = True
-except ImportError:
-    HAS_WEASYPRINT = False
+    HAS_RECON_WRAPPER = False
+    print("Warning: ReconWrapper class not found. Creating fallback.")
 
 # Try to import optional dependencies
 try:
@@ -457,6 +450,7 @@ class ErrorHandler:
         module_info = f" in {module_name}" if module_name else ""
         
         suggestions = {
+            # EXTERNAL TOOLS (23 total for Core Functionality Module):
             'nmap': "Install with: sudo apt-get install nmap (Ubuntu/Debian) or brew install nmap (macOS)",
             'masscan': "Install with: sudo apt-get install masscan or compile from source",
             'gobuster': "Install with: sudo apt-get install gobuster or go install github.com/OJ/gobuster/v3@latest",
@@ -465,12 +459,21 @@ class ErrorHandler:
             'amass': "Download from: https://github.com/OWASP/Amass/releases",
             'ffuf': "Install with: go install github.com/ffuf/ffuf@latest",
             'feroxbuster': "Download from: https://github.com/epi052/feroxbuster/releases",
+            'assetfinder': "Install with: go install github.com/tomnomnom/assetfinder@latest",
+            'subfinder': "Install with: go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest",
+            'nuclei': "Install with: go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest",
+            'httpx': "Install with: go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest",
+            'waybackpy': "Install with: pip install waybackpy",
+            'shodan': "Install with: pip install shodan",
+            'theharvester': "Install with: sudo apt-get install theharvester",
+            'recon-ng': "Install with: sudo apt-get install recon-ng",
+            'dirb': "Install with: sudo apt-get install dirb",
+            'wfuzz': "Install with: pip install wfuzz",
+            'sqlmap': "Install with: sudo apt-get install sqlmap or pip install sqlmap",
+            'testssl': "Download from: https://github.com/drwetter/testssl.sh",
             'whatweb': "Install with: sudo apt-get install whatweb",
             'wafw00f': "Install with: pip install wafw00f",
-            'sqlmap': "Install with: sudo apt-get install sqlmap or pip install sqlmap",
-            'chromium': "Install with: sudo apt-get install chromium-browser",
-            'chrome': "Download from: https://www.google.com/chrome/",
-            'firefox': "Install with: sudo apt-get install firefox"
+            'dig': "Install with: sudo apt-get install dnsutils"
         }
         
         suggestion = suggestions.get(tool_name.lower(), f"Please install {tool_name} and ensure it's in your PATH")
@@ -4753,6006 +4756,714 @@ class Screenshotter:
         self.logger.info(f"Screenshot results saved to {json_file}")
 
 
-# ============================== RISK SCORER ==============================
-class RiskScorer:
-    """Advanced risk scoring and assessment engine"""
-    
-    def __init__(self, config=None):
-        self.config = config or {}
-        self.logger = logging.getLogger(__name__)
+# Fallback ReconWrapper class if import fails
+if not HAS_RECON_WRAPPER:
+    class ReconWrapper:
+        """Fallback ReconWrapper class with basic functionality"""
         
-        # Risk scoring weights (configurable)
-        self.weights = {
-            'critical_vulns': 30,
-            'high_vulns': 20,
-            'medium_vulns': 10,
-            'low_vulns': 5,
-            'expired_certs': 25,
-            'weak_protocols': 15,
-            'missing_headers': 10,
-            'open_ports': 8,
-            'exposed_services': 12
-        }
-        
-    def calculate_risk_score(self, results):
-        """Calculate comprehensive risk score (0-100)"""
-        try:
-            score = 0
-            max_score = 100
+        def __init__(self):
+            self.target = None
+            self.target_type = None
+            self.output_dir = None
+            self.config = ConfigManager()
+            self.logger = None
+            self.results = {}
+            self.scanners = {}
             
-            # Analyze vulnerabilities
-            vuln_score = self._score_vulnerabilities(results)
-            
-            # Analyze SSL/TLS security
-            ssl_score = self._score_ssl_security(results)
-            
-            # Analyze network exposure
-            network_score = self._score_network_exposure(results)
-            
-            # Analyze security configuration
-            config_score = self._score_security_configuration(results)
-            
-            # Calculate weighted total
-            total_score = (vuln_score * 0.4 + ssl_score * 0.3 + 
-                          network_score * 0.2 + config_score * 0.1)
-            
-            risk_details = {
-                'total_score': min(total_score, 100),
-                'risk_level': self._get_risk_level(total_score),
-                'component_scores': {
-                    'vulnerabilities': vuln_score,
-                    'ssl_tls': ssl_score,
-                    'network_exposure': network_score,
-                    'security_config': config_score
-                },
-                'recommendations': self._generate_recommendations(results, total_score)
-            }
-            
-            return risk_details
-            
-        except Exception as e:
-            self.logger.error(f"Risk scoring failed: {str(e)}")
-            return {'total_score': 0, 'risk_level': 'unknown', 'error': str(e)}
-            
-    def _score_vulnerabilities(self, results):
-        """Score based on identified vulnerabilities"""
-        score = 0
+            # Initialize components
+            self.resource_monitor = ResourceMonitor(self.config)
+            self.progress_tracker = ProgressTracker(self.config)
+            self.error_handler = ErrorHandler(self.config)
         
-        # Web analysis vulnerabilities (new data structure)
-        web_analysis = results.get('web_analysis', {})
+        def setup_logging(self):
+            """Setup basic logging"""
+            log_file = self.output_dir / "scan.log"
+            logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                handlers=[
+                    logging.FileHandler(log_file),
+                    logging.StreamHandler()
+                ]
+            )
+            self.logger = logging.getLogger('recon_wrapper')
+            self.logger.info(f"Logging initialized for target: {self.target}")
         
-        # Check if vulnerabilities are directly in web_analysis
-        vulnerabilities = web_analysis.get('vulnerabilities', [])
-        for vuln in vulnerabilities:
-            severity = vuln.get('severity', 'low').lower()
-            if severity == 'critical':
-                score += 25
-            elif severity == 'high':
-                score += 15
-            elif severity == 'medium':
-                score += 8
-            elif severity == 'low':
-                score += 3
-        
-        # Check if vulnerabilities are in applications array
-        applications = web_analysis.get('applications', [])
-        for app in applications:
-            app_vulns = app.get('vulnerabilities', [])
-            for vuln in app_vulns:
-                severity = vuln.get('severity', 'low').lower()
-                if severity == 'critical':
-                    score += 25
-                elif severity == 'high':
-                    score += 15
-                elif severity == 'medium':
-                    score += 8
-                elif severity == 'low':
-                    score += 3
-        
-        # SSL scan vulnerabilities (new data structure)
-        ssl_scan = results.get('ssl_scan', {})
-        for domain_data in ssl_scan.values():
-            if isinstance(domain_data, dict) and 'vulnerabilities' in domain_data:
-                ssl_vulns = domain_data.get('vulnerabilities', [])
-                for vuln in ssl_vulns:
-                    severity = vuln.get('severity', 'low').lower()
-                    if severity == 'critical':
-                        score += 20
-                    elif severity == 'high':
-                        score += 12
-                    elif severity == 'medium':
-                        score += 6
-                    elif severity == 'low':
-                        score += 2
-                
-        # Legacy security analysis vulnerabilities (fallback)
-        security_results = results.get('security_analysis', {})
-        ssl_analysis = security_results.get('ssl_analysis', {})
-        
-        for port_data in ssl_analysis.values():
-            vulnerabilities = port_data.get('vulnerabilities', [])
-            for vuln in vulnerabilities:
-                severity = vuln.get('severity', 'low').lower()
-                if severity == 'critical':
-                    score += 25
-                elif severity == 'high':
-                    score += 15
-                elif severity == 'medium':
-                    score += 8
-                elif severity == 'low':
-                    score += 3
-                    
-        return min(score, 40)  # Cap at 40 points
-        
-    def _score_ssl_security(self, results):
-        """Score SSL/TLS security configuration"""
-        score = 0
-        
-        # SSL scan results (new data structure)
-        ssl_scan = results.get('ssl_scan', {})
-        for domain_data in ssl_scan.values():
-            if isinstance(domain_data, dict):
-                # Check for weak protocols
-                protocols = domain_data.get('protocols', [])
-                for proto in protocols:
-                    if isinstance(proto, dict):
-                        if proto.get('supported') and proto.get('name') in ['SSLv2', 'SSLv3']:
-                            score += 15
-                        elif proto.get('supported') and proto.get('name') == 'TLSv1.0':
-                            score += 8
-                    elif isinstance(proto, str) and proto in ['SSLv2', 'SSLv3', 'TLSv1.0']:
-                        score += 10
-                        
-                # Check certificate issues
-                cert_info = domain_data.get('certificate')
-                if cert_info:
-                    try:
-                        from datetime import datetime
-                        if cert_info.get('not_after'):
-                            expiry_str = cert_info['not_after']
-                            # Handle different date formats
-                            if 'Z' in expiry_str:
-                                expiry = datetime.fromisoformat(expiry_str.replace('Z', '+00:00'))
-                            else:
-                                expiry = datetime.fromisoformat(expiry_str)
-                            if expiry < datetime.now():
-                                score += 20  # Expired certificate
-                            elif (expiry - datetime.now()).days < 30:
-                                score += 10  # Expiring soon
-                    except Exception:
-                        pass
-                        
-                # Check for SSL vulnerabilities
-                vulnerabilities = domain_data.get('vulnerabilities', [])
-                for vuln in vulnerabilities:
-                    severity = vuln.get('severity', 'low').lower()
-                    if severity in ['critical', 'high']:
-                        score += 10
-                    elif severity == 'medium':
-                        score += 5
-                        
-                # Check security headers
-                headers = domain_data.get('security_headers', {})
-                missing_critical = ['Strict-Transport-Security', 'Content-Security-Policy']
-                for header in missing_critical:
-                    if not headers.get(header, {}).get('present', False):
-                        score += 5
-        
-        # Legacy security analysis (fallback)
-        security_results = results.get('security_analysis', {})
-        ssl_analysis = security_results.get('ssl_analysis', {})
-        
-        for port_data in ssl_analysis.values():
-            # Check for weak protocols
-            protocols = port_data.get('protocols', [])
-            for proto in protocols:
-                if proto.get('supported') and proto.get('name') in ['SSLv2', 'SSLv3']:
-                    score += 15
-                elif proto.get('supported') and proto.get('name') == 'TLSv1.0':
-                    score += 8
-                    
-            # Check certificate issues
-            cert_info = port_data.get('certificate')
-            if cert_info:
-                try:
-                    from datetime import datetime
-                    if cert_info.get('not_after'):
-                        expiry = datetime.fromisoformat(cert_info['not_after'].replace('Z', '+00:00'))
-                        if expiry < datetime.now():
-                            score += 20  # Expired certificate
-                        elif (expiry - datetime.now()).days < 30:
-                            score += 10  # Expiring soon
-                except Exception:
-                    pass
-                    
-            # Check security headers
-            headers = port_data.get('security_headers', {})
-            missing_critical = ['Strict-Transport-Security', 'Content-Security-Policy']
-            for header in missing_critical:
-                if not headers.get(header, {}).get('present'):
-                    score += 5
-                    
-        return min(score, 30)  # Cap at 30 points
-        
-    def _score_network_exposure(self, results):
-        """Score network exposure and open ports"""
-        score = 0
-        
-        # Count open ports from network scan (new data structure)
-        network_scan = results.get('network_scan', {})
-        total_open_ports = 0
-        
-        # Handle both old and new network scan data structures
-        hosts = network_scan.get('hosts', [])
-        if not hosts:
-            # Try alternative structure
-            hosts = network_scan.get('results', {}).get('hosts', [])
-        
-        for host in hosts:
-            ports = host.get('ports', [])
-            open_ports = [p for p in ports if p.get('state') == 'open']
-            total_open_ports += len(open_ports)
-            
-            # High-risk ports
-            high_risk_ports = [21, 23, 53, 135, 139, 445, 1433, 3389]
-            for port in open_ports:
-                if port.get('port') in high_risk_ports:
-                    score += 5
-        
-        # Legacy nmap results (fallback)
-        nmap_results = results.get('nmap', {})
-        legacy_hosts = nmap_results.get('hosts', [])
-        
-        for host in legacy_hosts:
-            ports = host.get('ports', [])
-            open_ports = [p for p in ports if p.get('state') == 'open']
-            total_open_ports += len(open_ports)
-            
-            # High-risk ports
-            high_risk_ports = [21, 23, 53, 135, 139, 445, 1433, 3389]
-            for port in open_ports:
-                if port.get('port') in high_risk_ports:
-                    score += 5
-                    
-        # General port exposure
-        if total_open_ports > 20:
-            score += 10
-        elif total_open_ports > 10:
-            score += 5
-            
-        # Subdomain exposure
-        subdomains = results.get('subdomains', [])
-        if len(subdomains) > 50:
-            score += 8
-        elif len(subdomains) > 20:
-            score += 4
-            
-        return min(score, 20)  # Cap at 20 points
-        
-    def _score_security_configuration(self, results):
-        """Score security configuration issues"""
-        score = 0
-        
-        # Web analysis vulnerabilities (new data structure)
-        web_analysis = results.get('web_analysis', {})
-        vulnerabilities = web_analysis.get('vulnerabilities', [])
-        if vulnerabilities:
-            score += len(vulnerabilities) * 2
-        
-        # SSL scan security issues (new data structure)
-        ssl_scan = results.get('ssl_scan', {})
-        for domain_data in ssl_scan.values():
-            if isinstance(domain_data, dict):
-                # Check for security headers
-                headers = domain_data.get('security_headers', {})
-                security_headers = ['X-Frame-Options', 'X-Content-Type-Options', 
-                                  'X-XSS-Protection', 'Referrer-Policy']
-                missing_count = sum(1 for h in security_headers 
-                                  if not headers.get(h, {}).get('present', False))
-                score += missing_count * 2
-                
-                # Check for SSL/TLS issues
-                ssl_issues = domain_data.get('ssl_issues', [])
-                score += len(ssl_issues) * 3
-        
-        # Legacy web scan (fallback)
-        web_scan = results.get('web_scan', {})
-        if web_scan.get('vulnerabilities'):
-            score += len(web_scan['vulnerabilities']) * 2
-            
-        # Legacy security analysis (fallback)
-        security_results = results.get('security_analysis', {})
-        ssl_analysis = security_results.get('ssl_analysis', {})
-        
-        for port_data in ssl_analysis.values():
-            headers = port_data.get('security_headers', {})
-            security_headers = ['X-Frame-Options', 'X-Content-Type-Options', 
-                              'X-XSS-Protection', 'Referrer-Policy']
-            missing_count = sum(1 for h in security_headers 
-                              if not headers.get(h, {}).get('present'))
-            score += missing_count * 2
-            
-        return min(score, 10)  # Cap at 10 points
-        
-    def _get_risk_level(self, score):
-        """Determine risk level based on score"""
-        if score >= 70:
-            return 'critical'
-        elif score >= 50:
-            return 'high'
-        elif score >= 30:
-            return 'medium'
-        elif score >= 10:
-            return 'low'
-        else:
-            return 'minimal'
-            
-    def _generate_recommendations(self, results, score):
-        """Generate prioritized recommendations"""
-        recommendations = []
-        
-        if score >= 50:
-            recommendations.append({
-                'priority': 'critical',
-                'category': 'immediate_action',
-                'title': 'Critical Security Issues Detected',
-                'description': 'Multiple high-severity vulnerabilities require immediate attention.',
-                'actions': ['Patch expired certificates', 'Disable weak protocols', 'Implement security headers']
-            })
-            
-        # Add specific recommendations based on findings
-        security_results = results.get('security_analysis', {})
-        ssl_analysis = security_results.get('ssl_analysis', {})
-        
-        for port_data in ssl_analysis.values():
-            vulnerabilities = port_data.get('vulnerabilities', [])
-            for vuln in vulnerabilities:
-                if vuln.get('severity') in ['critical', 'high']:
-                    recommendations.append({
-                        'priority': vuln.get('severity'),
-                        'category': 'ssl_tls',
-                        'title': vuln.get('name'),
-                        'description': vuln.get('description'),
-                        'actions': ['Review SSL/TLS configuration', 'Update certificates', 'Disable weak protocols']
-                    })
-                    
-        return recommendations[:10]  # Top 10 recommendations
-
-
-# ============================== ADVANCED REPORT GENERATOR ==============================
-class CVSSCalculator:
-    """CVSS v3.1 (Common Vulnerability Scoring System) calculator"""
-    
-    def __init__(self):
-        # CVSS v3.1 Base Score Metrics
-        self.attack_vector_scores = {
-            'network': 0.85,      # AV:N
-            'adjacent': 0.62,     # AV:A
-            'local': 0.55,        # AV:L
-            'physical': 0.2       # AV:P
-        }
-        
-        self.attack_complexity_scores = {
-            'low': 0.77,          # AC:L
-            'high': 0.44          # AC:H
-        }
-        
-        self.privileges_required_scores = {
-            'none': 0.85,         # PR:N
-            'low': 0.62,          # PR:L (changed scope)
-            'low_unchanged': 0.62, # PR:L (unchanged scope)
-            'high': 0.27,         # PR:H (changed scope)
-            'high_unchanged': 0.27 # PR:H (unchanged scope)
-        }
-        
-        self.user_interaction_scores = {
-            'none': 0.85,         # UI:N
-            'required': 0.62      # UI:R
-        }
-        
-        self.impact_scores = {
-            'none': 0.0,          # C:N, I:N, A:N
-            'low': 0.22,          # C:L, I:L, A:L
-            'high': 0.56          # C:H, I:H, A:H
-        }
-        
-        # Vulnerability type patterns and their typical CVSS characteristics
-        self.vulnerability_patterns = {
-            'sql_injection': {
-                'attack_vector': 'network',
-                'attack_complexity': 'low',
-                'privileges_required': 'none',
-                'user_interaction': 'none',
-                'confidentiality': 'high',
-                'integrity': 'high',
-                'availability': 'high',
-                'scope_changed': True
-            },
-            'rce': {
-                'attack_vector': 'network',
-                'attack_complexity': 'low',
-                'privileges_required': 'none',
-                'user_interaction': 'none',
-                'confidentiality': 'high',
-                'integrity': 'high',
-                'availability': 'high',
-                'scope_changed': True
-            },
-            'command_injection': {
-                'attack_vector': 'network',
-                'attack_complexity': 'low',
-                'privileges_required': 'low',
-                'user_interaction': 'none',
-                'confidentiality': 'high',
-                'integrity': 'high',
-                'availability': 'high',
-                'scope_changed': True
-            },
-            'xss': {
-                'attack_vector': 'network',
-                'attack_complexity': 'low',
-                'privileges_required': 'none',
-                'user_interaction': 'required',
-                'confidentiality': 'low',
-                'integrity': 'low',
-                'availability': 'none',
-                'scope_changed': True
-            },
-            'csrf': {
-                'attack_vector': 'network',
-                'attack_complexity': 'low',
-                'privileges_required': 'none',
-                'user_interaction': 'required',
-                'confidentiality': 'none',
-                'integrity': 'high',
-                'availability': 'none',
-                'scope_changed': False
-            },
-            'ssl_vulnerability': {
-                'attack_vector': 'network',
-                'attack_complexity': 'high',
-                'privileges_required': 'none',
-                'user_interaction': 'none',
-                'confidentiality': 'high',
-                'integrity': 'low',
-                'availability': 'none',
-                'scope_changed': False
-            },
-            'information_disclosure': {
-                'attack_vector': 'network',
-                'attack_complexity': 'low',
-                'privileges_required': 'none',
-                'user_interaction': 'none',
-                'confidentiality': 'low',
-                'integrity': 'none',
-                'availability': 'none',
-                'scope_changed': False
-            },
-            'missing_security_headers': {
-                'attack_vector': 'network',
-                'attack_complexity': 'low',
-                'privileges_required': 'none',
-                'user_interaction': 'required',
-                'confidentiality': 'low',
-                'integrity': 'low',
-                'availability': 'none',
-                'scope_changed': False
-            },
-            'weak_authentication': {
-                'attack_vector': 'network',
-                'attack_complexity': 'low',
-                'privileges_required': 'none',
-                'user_interaction': 'none',
-                'confidentiality': 'high',
-                'integrity': 'high',
-                'availability': 'none',
-                'scope_changed': False
-            },
-            'rate_limiting': {
-                'attack_vector': 'network',
-                'attack_complexity': 'low',
-                'privileges_required': 'none',
-                'user_interaction': 'none',
-                'confidentiality': 'none',
-                'integrity': 'none',
-                'availability': 'high',
-                'scope_changed': False
-            }
-        }
-        
-    def calculate_cvss(self, vulnerability):
-        """Calculate CVSS v3.1 score for a vulnerability"""
-        try:
-            # Get vulnerability characteristics
-            vuln_type = self._identify_vulnerability_type(vulnerability)
-            characteristics = self._get_vulnerability_characteristics(vulnerability, vuln_type)
-            
-            # Calculate base score using CVSS v3.1 formula
-            base_score = self._calculate_base_score(characteristics)
-            
-            # Ensure score is within valid range
-            return round(max(0.0, min(10.0, base_score)), 1)
-            
-        except Exception as e:
-            # Fallback to severity-based scoring
-            severity = vulnerability.get('severity', 'low').lower()
-            severity_map = {
-                'critical': 9.5,
-                'high': 7.5,
-                'medium': 5.0,
-                'low': 2.5,
-                'info': 0.1
-            }
-            return severity_map.get(severity, 2.5)
-    
-    def _identify_vulnerability_type(self, vulnerability):
-        """Identify vulnerability type from vulnerability data"""
-        vuln_name = vulnerability.get('name', '').lower()
-        vuln_type = vulnerability.get('type', '').lower()
-        description = vulnerability.get('description', '').lower()
-        
-        # Combine all text for pattern matching
-        full_text = f"{vuln_name} {vuln_type} {description}"
-        
-        # Check for SQL injection
-        if any(term in full_text for term in ['sql injection', 'sqli', 'sql_injection']):
-            return 'sql_injection'
-        
-        # Check for RCE
-        if any(term in full_text for term in ['remote code execution', 'rce', 'code execution']):
-            return 'rce'
-        
-        # Check for Command Injection
-        if any(term in full_text for term in ['command injection', 'command_injection', 'cmd injection']):
-            return 'command_injection'
-        
-        # Check for XSS
-        if any(term in full_text for term in ['cross-site scripting', 'xss', 'cross site scripting']):
-            return 'xss'
-        
-        # Check for CSRF
-        if any(term in full_text for term in ['csrf', 'cross-site request forgery', 'cross site request']):
-            return 'csrf'
-        
-        # Check for SSL/TLS vulnerabilities
-        if any(term in full_text for term in ['ssl', 'tls', 'certificate', 'cipher', 'protocol']):
-            return 'ssl_vulnerability'
-        
-        # Check for information disclosure
-        if any(term in full_text for term in ['information disclosure', 'info disclosure', 'version exposed', 'server version']):
-            return 'information_disclosure'
-        
-        # Check for missing security headers
-        if any(term in full_text for term in ['security header', 'missing header', 'content security policy', 'csp']):
-            return 'missing_security_headers'
-        
-        # Check for authentication issues
-        if any(term in full_text for term in ['authentication', 'weak auth', 'login', 'password', 'account lockout']):
-            return 'weak_authentication'
-        
-        # Check for rate limiting issues
-        if any(term in full_text for term in ['rate limit', 'rate limiting', 'dos', 'denial of service']):
-            return 'rate_limiting'
-        
-        # Default to information disclosure for unknown types
-        return 'information_disclosure'
-    
-    def _get_vulnerability_characteristics(self, vulnerability, vuln_type):
-        """Get CVSS characteristics for a vulnerability"""
-        # Start with pattern defaults
-        characteristics = self.vulnerability_patterns.get(vuln_type, 
-            self.vulnerability_patterns['information_disclosure']).copy()
-        
-        # Override with explicit vulnerability data if available
-        if 'cvss' in vulnerability:
-            cvss_data = vulnerability['cvss']
-            characteristics.update({
-                'attack_vector': cvss_data.get('attack_vector', characteristics['attack_vector']),
-                'attack_complexity': cvss_data.get('attack_complexity', characteristics['attack_complexity']),
-                'privileges_required': cvss_data.get('privileges_required', characteristics['privileges_required']),
-                'user_interaction': cvss_data.get('user_interaction', characteristics['user_interaction']),
-                'confidentiality': cvss_data.get('confidentiality_impact', characteristics['confidentiality']),
-                'integrity': cvss_data.get('integrity_impact', characteristics['integrity']),
-                'availability': cvss_data.get('availability_impact', characteristics['availability']),
-                'scope_changed': cvss_data.get('scope_changed', characteristics['scope_changed'])
-            })
-        
-        # Adjust based on severity if provided
-        severity = vulnerability.get('severity', '').lower()
-        if severity == 'critical':
-            characteristics['confidentiality'] = 'high'
-            characteristics['integrity'] = 'high'
-            characteristics['availability'] = 'high'
-        elif severity == 'high':
-            if characteristics['confidentiality'] == 'none':
-                characteristics['confidentiality'] = 'low'
-            if characteristics['integrity'] == 'none':
-                characteristics['integrity'] = 'low'
-        
-        return characteristics
-    
-    def _calculate_base_score(self, characteristics):
-        """Calculate CVSS v3.1 base score using the official formula"""
-        # Get score components
-        av = self.attack_vector_scores[characteristics['attack_vector']]
-        ac = self.attack_complexity_scores[characteristics['attack_complexity']]
-        
-        # Handle privileges required based on scope change
-        pr_key = characteristics['privileges_required']
-        if characteristics['scope_changed'] and pr_key in ['low', 'high']:
-            pr_key = f"{pr_key}_unchanged" if not characteristics['scope_changed'] else pr_key
-        pr = self.privileges_required_scores.get(pr_key, self.privileges_required_scores['none'])
-        
-        ui = self.user_interaction_scores[characteristics['user_interaction']]
-        c = self.impact_scores[characteristics['confidentiality']]
-        i = self.impact_scores[characteristics['integrity']]
-        a = self.impact_scores[characteristics['availability']]
-        
-        # Calculate ISS (Impact Sub Score)
-        iss = 1 - ((1 - c) * (1 - i) * (1 - a))
-        
-        # Calculate impact score
-        if characteristics['scope_changed']:
-            impact = 7.52 * (iss - 0.029) - 3.25 * pow((iss - 0.02), 15)
-        else:
-            impact = 6.42 * iss
-        
-        # Calculate exploitability score
-        exploitability = 8.22 * av * ac * pr * ui
-        
-        # Calculate base score
-        if impact <= 0:
-            base_score = 0
-        elif characteristics['scope_changed']:
-            base_score = min(1.08 * (impact + exploitability), 10)
-        else:
-            base_score = min(impact + exploitability, 10)
-        
-        return base_score
-    
-    def get_cvss_vector(self, vulnerability):
-        """Generate CVSS v3.1 vector string"""
-        vuln_type = self._identify_vulnerability_type(vulnerability)
-        characteristics = self._get_vulnerability_characteristics(vulnerability, vuln_type)
-        
-        # Map to CVSS vector notation
-        vector_map = {
-            'attack_vector': {'network': 'N', 'adjacent': 'A', 'local': 'L', 'physical': 'P'},
-            'attack_complexity': {'low': 'L', 'high': 'H'},
-            'privileges_required': {'none': 'N', 'low': 'L', 'high': 'H'},
-            'user_interaction': {'none': 'N', 'required': 'R'},
-            'confidentiality': {'none': 'N', 'low': 'L', 'high': 'H'},
-            'integrity': {'none': 'N', 'low': 'L', 'high': 'H'},
-            'availability': {'none': 'N', 'low': 'L', 'high': 'H'}
-        }
-        
-        av = vector_map['attack_vector'][characteristics['attack_vector']]
-        ac = vector_map['attack_complexity'][characteristics['attack_complexity']]
-        pr = vector_map['privileges_required'][characteristics['privileges_required'].split('_')[0]]
-        ui = vector_map['user_interaction'][characteristics['user_interaction']]
-        s = 'C' if characteristics['scope_changed'] else 'U'
-        c = vector_map['confidentiality'][characteristics['confidentiality']]
-        i = vector_map['integrity'][characteristics['integrity']]
-        a = vector_map['availability'][characteristics['availability']]
-        
-        return f"CVSS:3.1/AV:{av}/AC:{ac}/PR:{pr}/UI:{ui}/S:{s}/C:{c}/I:{i}/A:{a}"
-
-class ComplianceMapper:
-    """Maps findings to compliance frameworks"""
-    
-    def __init__(self):
-        self.frameworks = {
-            'owasp_top10': self._map_owasp_top10,
-            'nist_framework': self._map_nist_framework,
-            'pci_dss': self._map_pci_dss,
-            'iso27001': self._map_iso27001
-        }
-        
-    def assess_compliance(self, results):
-        """Assess compliance across all frameworks"""
-        compliance_status = {}
-        
-        for framework_name, mapper_func in self.frameworks.items():
+        def initialize_scanners(self):
+            """Initialize all scanner components"""
             try:
-                status = mapper_func(results)
-                compliance_status[framework_name] = status
+                self.scanners = {
+                    'port': PortScanner(self.config, self.logger),
+                    'subdomain': SubdomainEnumerator(self.config, self.logger),
+                    'web': WebScanner(self.config, self.logger),
+                    'security': SecurityScanner(self.config, self.logger),
+                    'osint': OSINTCollector(self.config, self.logger),
+                    'screenshot': Screenshotter(self.config, self.logger)
+                }
+                self.logger.info("All scanners initialized successfully")
+                return True
             except Exception as e:
-                logging.error(f"Failed to assess {framework_name}: {e}")
-                compliance_status[framework_name] = {'status': 'error', 'message': str(e)}
-                
-        return compliance_status
-        
-    def _map_owasp_top10(self, results):
-        """Map findings to OWASP Top 10"""
-        owasp_status = {
-            'A01_broken_access_control': {'status': 'unknown', 'findings': []},
-            'A02_cryptographic_failures': {'status': 'pass', 'findings': []},
-            'A03_injection': {'status': 'pass', 'findings': []},
-            'A04_insecure_design': {'status': 'unknown', 'findings': []},
-            'A05_security_misconfiguration': {'status': 'pass', 'findings': []},
-            'A06_vulnerable_components': {'status': 'pass', 'findings': []},
-            'A07_identification_failures': {'status': 'unknown', 'findings': []},
-            'A08_software_integrity_failures': {'status': 'unknown', 'findings': []},
-            'A09_logging_failures': {'status': 'unknown', 'findings': []},
-            'A10_ssrf': {'status': 'unknown', 'findings': []}
-        }
-        
-        # Check for cryptographic failures
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                vulnerabilities = port_data.get('vulnerabilities', [])
-                for vuln in vulnerabilities:
-                    if any(term in vuln.get('type', '').lower() for term in ['ssl', 'tls', 'crypto', 'cipher']):
-                        owasp_status['A02_cryptographic_failures']['status'] = 'fail'
-                        owasp_status['A02_cryptographic_failures']['findings'].append(vuln.get('name', 'Unknown SSL/TLS issue'))
-                        
-        # Check for injection vulnerabilities
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            for vuln in results['web_scan']['vulnerabilities']:
-                vuln_type = vuln.get('type', '').lower()
-                if any(term in vuln_type for term in ['injection', 'sql', 'xss', 'command']):
-                    owasp_status['A03_injection']['status'] = 'fail'
-                    owasp_status['A03_injection']['findings'].append(vuln.get('description', 'Injection vulnerability'))
-                    
-        # Check for security misconfigurations
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                headers = port_data.get('security_headers', {})
-                for header, data in headers.items():
-                    if not data.get('present', True):
-                        owasp_status['A05_security_misconfiguration']['status'] = 'fail'
-                        owasp_status['A05_security_misconfiguration']['findings'].append(f'Missing {header} header')
-                        
-        return owasp_status
-        
-    def _map_nist_framework(self, results):
-        """Map findings to NIST Cybersecurity Framework"""
-        return {
-            'identify': {'score': 75, 'status': 'partial'},
-            'protect': {'score': 60, 'status': 'partial'},
-            'detect': {'score': 30, 'status': 'minimal'},
-            'respond': {'score': 0, 'status': 'unknown'},
-            'recover': {'score': 0, 'status': 'unknown'}
-        }
-        
-    def _map_pci_dss(self, results):
-        """Map findings to PCI DSS requirements"""
-        return {
-            'requirement_1': {'status': 'partial', 'description': 'Firewall configuration'},
-            'requirement_2': {'status': 'fail', 'description': 'Default passwords'},
-            'requirement_4': {'status': 'partial', 'description': 'Encryption in transit'},
-            'requirement_6': {'status': 'fail', 'description': 'Secure development'},
-            'requirement_11': {'status': 'pass', 'description': 'Security testing'}
-        }
-        
-    def _map_iso27001(self, results):
-        """Map findings to ISO 27001 controls"""
-        return {
-            'A.12.6.1': {'status': 'partial', 'description': 'Management of technical vulnerabilities'},
-            'A.13.1.1': {'status': 'fail', 'description': 'Network controls'},
-            'A.14.1.3': {'status': 'unknown', 'description': 'Protecting application services transactions'}
-        }
-
-class EvidenceCollector:
-    """Collects and manages evidence (screenshots, packets, logs)"""
-    
-    def __init__(self):
-        self.evidence_types = ['screenshots', 'http_samples', 'certificates', 'logs']
-        
-    def collect_evidence(self, results, output_dir):
-        """Collect all available evidence"""
-        evidence_dir = Path(output_dir) / "evidence"
-        evidence_dir.mkdir(exist_ok=True)
-        
-        collected = []
-        
-        # Collect SSL certificates
-        if 'security_analysis' in results:
-            cert_evidence = self._collect_certificates(results['security_analysis'], evidence_dir)
-            collected.extend(cert_evidence)
-            
-        # Collect HTTP samples
-        if 'web_scan' in results:
-            http_evidence = self._collect_http_samples(results['web_scan'], evidence_dir)
-            collected.extend(http_evidence)
-            
-        return collected
-        
-    def _collect_certificates(self, security_analysis, evidence_dir):
-        """Extract and save SSL certificates"""
-        certificates = []
-        ssl_analysis = security_analysis.get('ssl_analysis', {})
-        
-        for port, port_data in ssl_analysis.items():
-            cert_info = port_data.get('certificate', {})
-            if cert_info:
-                cert_file = evidence_dir / f"certificate_{port}.json"
-                with open(cert_file, 'w') as f:
-                    json.dump(cert_info, f, indent=2)
-                certificates.append(str(cert_file))
-                
-        return certificates
-        
-    def _collect_http_samples(self, web_scan, evidence_dir):
-        """Collect HTTP request/response samples"""
-        samples = []
-        # Implementation would collect actual HTTP samples
-        return samples
-
-class BaselineTracker:
-    """Tracks historical baselines and comparisons"""
-    
-    def __init__(self):
-        self.baseline_file = "security_baseline.json"
-        
-    def update_baseline(self, results, target):
-        """Update baseline with current scan results"""
-        try:
-            baseline_data = self._load_baseline()
-            
-            current_scan = {
-                'timestamp': datetime.now().isoformat(),
-                'target': target,
-                'risk_score': self._extract_risk_score(results),
-                'vulnerability_count': self._count_vulnerabilities(results),
-                'open_ports': self._extract_open_ports(results)
-            }
-            
-            if target not in baseline_data:
-                baseline_data[target] = []
-                
-            baseline_data[target].append(current_scan)
-            
-            # Keep only last 10 scans
-            baseline_data[target] = baseline_data[target][-10:]
-            
-            self._save_baseline(baseline_data)
-            return True
-            
-        except Exception as e:
-            logging.error(f"Failed to update baseline: {e}")
-            return False
-            
-    def get_historical_comparison(self, target):
-        """Get historical comparison data"""
-        try:
-            baseline_data = self._load_baseline()
-            return baseline_data.get(target, [])
-        except Exception:
-            return []
-            
-    def _load_baseline(self):
-        """Load baseline data from file"""
-        try:
-            if os.path.exists(self.baseline_file):
-                with open(self.baseline_file, 'r') as f:
-                    return json.load(f)
-        except Exception:
-            pass
-        return {}
-        
-    def _save_baseline(self, data):
-        """Save baseline data to file"""
-        with open(self.baseline_file, 'w') as f:
-            json.dump(data, f, indent=2)
-            
-    def _extract_risk_score(self, results):
-        """Extract risk score from results"""
-        # Implementation would extract actual risk score
-        return 0
-        
-    def _count_vulnerabilities(self, results):
-        """Count total vulnerabilities"""
-        count = 0
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            count += len(results['web_scan']['vulnerabilities'])
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                count += len(port_data.get('vulnerabilities', []))
-        return count
-        
-    def _extract_open_ports(self, results):
-        """Extract open ports list"""
-        ports = []
-        if 'nmap' in results and 'hosts' in results['nmap']:
-            for host in results['nmap']['hosts']:
-                for port_info in host.get('ports', []):
-                    if port_info.get('state') == 'open':
-                        ports.append(port_info.get('port'))
-        return ports
-
-class CSVExporter:
-    """Export data to CSV format"""
-    
-    def export_vulnerabilities(self, results, output_dir):
-        """Export vulnerabilities to CSV"""
-        csv_file = Path(output_dir) / "vulnerabilities_detailed.csv"
-        
-        with open(csv_file, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(['Source', 'Port', 'Severity', 'Type', 'Name', 'Description', 'CVSS_Score'])
-            
-            # Web vulnerabilities
-            if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-                for vuln in results['web_scan']['vulnerabilities']:
-                    cvss_calc = CVSSCalculator()
-                    cvss_score = cvss_calc.calculate_cvss(vuln)
-                    writer.writerow([
-                        'Web Scan',
-                        vuln.get('port', 'N/A'),
-                        vuln.get('severity', 'Unknown'),
-                        vuln.get('type', 'Unknown'),
-                        vuln.get('name', 'Unknown'),
-                        vuln.get('description', 'No description'),
-                        cvss_score
-                    ])
-                    
-            # SSL/TLS vulnerabilities
-            if 'security_analysis' in results:
-                ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-                for port, port_data in ssl_analysis.items():
-                    for vuln in port_data.get('vulnerabilities', []):
-                        cvss_calc = CVSSCalculator()
-                        cvss_score = cvss_calc.calculate_cvss(vuln)
-                        writer.writerow([
-                            'SSL/TLS Analysis',
-                            port.replace('port_', ''),
-                            vuln.get('severity', 'Unknown'),
-                            vuln.get('type', 'Unknown'),
-                            vuln.get('name', 'Unknown'),
-                            vuln.get('description', 'No description'),
-                            cvss_score
-                        ])
-                        
-        return str(csv_file)
-        
-    def export_network_data(self, results, output_dir):
-        """Export network/port data to CSV"""
-        csv_file = Path(output_dir) / "network_analysis.csv"
-        
-        with open(csv_file, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(['Host', 'Port', 'Protocol', 'State', 'Service', 'Version', 'Risk_Level'])
-            
-            if 'nmap' in results and 'hosts' in results['nmap']:
-                for host in results['nmap']['hosts']:
-                    host_addr = host.get('address', 'Unknown')
-                    for port_info in host.get('ports', []):
-                        risk_level = self._assess_port_risk(port_info)
-                        service_info = port_info.get('service', {})
-                        writer.writerow([
-                            host_addr,
-                            port_info.get('port', 'Unknown'),
-                            port_info.get('protocol', 'Unknown'),
-                            port_info.get('state', 'Unknown'),
-                            service_info.get('name', 'Unknown'),
-                            service_info.get('version', 'Unknown'),
-                            risk_level
-                        ])
-                        
-        return str(csv_file)
-        
-    def _assess_port_risk(self, port_info):
-        """Assess risk level for a port"""
-        dangerous_ports = [21, 22, 23, 25, 53, 135, 139, 445, 1433, 3306, 3389, 5432]
-        port = int(port_info.get('port', 0))
-        
-        if port in dangerous_ports:
-            return 'High'
-        elif port < 1024:
-            return 'Medium'
-        else:
-            return 'Low'
-
-class ExcelExporter:
-    """Export data to Excel format (requires openpyxl)"""
-    
-    def __init__(self):
-        self.available = self._check_dependencies()
-        
-    def _check_dependencies(self):
-        """Check if Excel dependencies are available"""
-        try:
-            import openpyxl
-            return True
-        except ImportError:
-            return False
-            
-    def export(self, results, output_dir):
-        """Export comprehensive Excel workbook"""
-        if not self.available:
-            return None
-            
-        try:
-            import openpyxl
-            from openpyxl.styles import Font, PatternFill
-            
-            wb = openpyxl.Workbook()
-            
-            # Executive Summary sheet
-            self._create_executive_sheet(wb, results)
-            
-            # Vulnerabilities sheet
-            self._create_vulnerabilities_sheet(wb, results)
-            
-            # Network Analysis sheet
-            self._create_network_sheet(wb, results)
-            
-            # Compliance sheet
-            self._create_compliance_sheet(wb, results)
-            
-            excel_file = Path(output_dir) / "security_assessment.xlsx"
-            wb.save(excel_file)
-            
-            return str(excel_file)
-            
-        except Exception as e:
-            logging.error(f"Excel export failed: {e}")
-            return None
-            
-    def _create_executive_sheet(self, workbook, results):
-        """Create executive summary sheet"""
-        try:
-            from openpyxl.styles import Font, PatternFill
-        except ImportError:
-            Font = None
-            PatternFill = None
-            
-        ws = workbook.active
-        ws.title = "Executive Summary"
-        
-        # Headers
-        ws['A1'] = "Security Assessment Executive Summary"
-        if Font:
-            ws['A1'].font = Font(size=16, bold=True)
-        
-        # Summary metrics
-        ws['A3'] = "Metric"
-        ws['B3'] = "Value"
-        ws['A4'] = "Total Vulnerabilities"
-        ws['A5'] = "Critical Vulnerabilities"
-        ws['A6'] = "High Vulnerabilities"
-        ws['A7'] = "Open Ports"
-        ws['A8'] = "Risk Score"
-        
-        # Calculate values
-        vuln_count = self._count_vulnerabilities(results)
-        critical_count = self._count_critical_vulnerabilities(results)
-        high_count = self._count_high_vulnerabilities(results)
-        open_ports = self._count_open_ports(results)
-        
-        ws['B4'] = vuln_count
-        ws['B5'] = critical_count
-        ws['B6'] = high_count
-        ws['B7'] = open_ports
-        ws['B8'] = "Medium"  # Placeholder
-        
-    def _create_vulnerabilities_sheet(self, workbook, results):
-        """Create detailed vulnerabilities sheet"""
-        ws = workbook.create_sheet("Vulnerabilities")
-        
-        headers = ['Source', 'Severity', 'Type', 'Name', 'Description', 'CVSS Score']
-        for col, header in enumerate(headers, 1):
-            ws.cell(row=1, column=col, value=header)
-            
-        # Add vulnerability data
-        row = 2
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            for vuln in results['web_scan']['vulnerabilities']:
-                ws.cell(row=row, column=1, value='Web Scan')
-                ws.cell(row=row, column=2, value=vuln.get('severity', 'Unknown'))
-                ws.cell(row=row, column=3, value=vuln.get('type', 'Unknown'))
-                ws.cell(row=row, column=4, value=vuln.get('name', 'Unknown'))
-                ws.cell(row=row, column=5, value=vuln.get('description', 'No description'))
-                
-                cvss_calc = CVSSCalculator()
-                cvss_score = cvss_calc.calculate_cvss(vuln)
-                ws.cell(row=row, column=6, value=cvss_score)
-                row += 1
-                
-    def _create_network_sheet(self, workbook, results):
-        """Create network analysis sheet"""
-        ws = workbook.create_sheet("Network Analysis")
-        
-        headers = ['Host', 'Port', 'Protocol', 'State', 'Service', 'Version']
-        for col, header in enumerate(headers, 1):
-            ws.cell(row=1, column=col, value=header)
-            
-        # Add network data
-        row = 2
-        if 'nmap' in results and 'hosts' in results['nmap']:
-            for host in results['nmap']['hosts']:
-                host_addr = host.get('address', 'Unknown')
-                for port_info in host.get('ports', []):
-                    ws.cell(row=row, column=1, value=host_addr)
-                    ws.cell(row=row, column=2, value=port_info.get('port', 'Unknown'))
-                    ws.cell(row=row, column=3, value=port_info.get('protocol', 'Unknown'))
-                    ws.cell(row=row, column=4, value=port_info.get('state', 'Unknown'))
-                    
-                    service_info = port_info.get('service', {})
-                    ws.cell(row=row, column=5, value=service_info.get('name', 'Unknown'))
-                    ws.cell(row=row, column=6, value=service_info.get('version', 'Unknown'))
-                    row += 1
-                    
-    def _create_compliance_sheet(self, workbook, results):
-        """Create compliance mapping sheet"""
-        try:
-            from openpyxl.styles import Font, PatternFill
-        except ImportError:
-            Font = None
-            PatternFill = None
-            
-        ws = workbook.create_sheet("Compliance")
-        
-        ws['A1'] = "Compliance Framework Mapping"
-        if Font:
-            ws['A1'].font = Font(size=14, bold=True)
-        
-        ws['A3'] = "Framework"
-        ws['B3'] = "Control"
-        ws['C3'] = "Status"
-        ws['D3'] = "Findings"
-        
-        # Add compliance data
-        compliance_mapper = ComplianceMapper()
-        compliance_status = compliance_mapper.assess_compliance(results)
-        
-        row = 4
-        for framework, controls in compliance_status.items():
-            if isinstance(controls, dict):
-                for control, data in controls.items():
-                    ws.cell(row=row, column=1, value=framework.upper())
-                    ws.cell(row=row, column=2, value=control)
-                    ws.cell(row=row, column=3, value=data.get('status', 'Unknown'))
-                    
-                    findings = data.get('findings', [])
-                    findings_text = '; '.join(findings) if findings else 'None'
-                    ws.cell(row=row, column=4, value=findings_text)
-                    row += 1
-                    
-    def _count_vulnerabilities(self, results):
-        """Count total vulnerabilities"""
-        count = 0
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            count += len(results['web_scan']['vulnerabilities'])
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                count += len(port_data.get('vulnerabilities', []))
-        return count
-        
-    def _count_critical_vulnerabilities(self, results):
-        """Count critical vulnerabilities"""
-        count = 0
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            for vuln in results['web_scan']['vulnerabilities']:
-                if vuln.get('severity', '').lower() == 'critical':
-                    count += 1
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                for vuln in port_data.get('vulnerabilities', []):
-                    if vuln.get('severity', '').lower() == 'critical':
-                        count += 1
-        return count
-        
-    def _count_high_vulnerabilities(self, results):
-        """Count high severity vulnerabilities"""
-        count = 0
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            for vuln in results['web_scan']['vulnerabilities']:
-                if vuln.get('severity', '').lower() == 'high':
-                    count += 1
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                for vuln in port_data.get('vulnerabilities', []):
-                    if vuln.get('severity', '').lower() == 'high':
-                        count += 1
-        return count
-        
-    def _count_open_ports(self, results):
-        """Count open ports"""
-        count = 0
-        if 'nmap' in results and 'hosts' in results['nmap']:
-            for host in results['nmap']['hosts']:
-                for port_info in host.get('ports', []):
-                    if port_info.get('state') == 'open':
-                        count += 1
-        return count
-
-class WordExporter:
-    """Export data to Word document format (requires python-docx)"""
-    
-    def __init__(self):
-        self.available = self._check_dependencies()
-        
-    def _check_dependencies(self):
-        """Check if Word dependencies are available"""
-        try:
-            import docx
-            return True
-        except ImportError:
-            return False
-            
-    def export(self, results, output_dir):
-        """Export comprehensive Word document"""
-        if not self.available:
-            return None
-            
-        try:
-            import docx
-            from docx.shared import Inches
-            
-            doc = docx.Document()
-            
-            # Title
-            title = doc.add_heading('Security Assessment Report', 0)
-            
-            # Executive Summary
-            doc.add_heading('Executive Summary', 1)
-            summary_para = doc.add_paragraph()
-            summary_para.add_run('This report presents the findings of a comprehensive security assessment conducted on the target system.')
-            
-            # Vulnerability Summary
-            doc.add_heading('Vulnerability Summary', 2)
-            vuln_count = self._count_vulnerabilities(results)
-            doc.add_paragraph(f'Total vulnerabilities identified: {vuln_count}')
-            
-            # Detailed Findings
-            doc.add_heading('Detailed Findings', 1)
-            
-            if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-                doc.add_heading('Web Application Vulnerabilities', 2)
-                for vuln in results['web_scan']['vulnerabilities']:
-                    doc.add_heading(vuln.get('name', 'Unknown Vulnerability'), 3)
-                    doc.add_paragraph(f"Severity: {vuln.get('severity', 'Unknown')}")
-                    doc.add_paragraph(f"Description: {vuln.get('description', 'No description available')}")
-                    
-            # Network Analysis
-            if 'nmap' in results:
-                doc.add_heading('Network Analysis', 2)
-                doc.add_paragraph('The following network services were identified:')
-                
-                if 'hosts' in results['nmap']:
-                    for host in results['nmap']['hosts']:
-                        doc.add_paragraph(f"Host: {host.get('address', 'Unknown')}")
-                        for port_info in host.get('ports', []):
-                            if port_info.get('state') == 'open':
-                                service_info = port_info.get('service', {})
-                                doc.add_paragraph(f"  Port {port_info.get('port')}: {service_info.get('name', 'Unknown')} ({service_info.get('version', 'Unknown version')})")
-                                
-            # Recommendations
-            doc.add_heading('Recommendations', 1)
-            doc.add_paragraph('Based on the findings, the following remediation actions are recommended:')
-            doc.add_paragraph('1. Address all critical and high severity vulnerabilities immediately')
-            doc.add_paragraph('2. Implement proper SSL/TLS configuration')
-            doc.add_paragraph('3. Review and harden network service configurations')
-            doc.add_paragraph('4. Establish a regular vulnerability assessment schedule')
-            
-            word_file = Path(output_dir) / "security_assessment_report.docx"
-            doc.save(word_file)
-            
-            return str(word_file)
-            
-        except Exception as e:
-            logging.error(f"Word export failed: {e}")
-            return None
-            
-    def _count_vulnerabilities(self, results):
-        """Count total vulnerabilities"""
-        count = 0
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            count += len(results['web_scan']['vulnerabilities'])
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                count += len(port_data.get('vulnerabilities', []))
-        return count
-
-class PowerPointExporter:
-    """Export data to PowerPoint presentation format (requires python-pptx)"""
-    
-    def __init__(self):
-        self.available = self._check_dependencies()
-        
-    def _check_dependencies(self):
-        """Check if PowerPoint dependencies are available"""
-        try:
-            import pptx
-            return True
-        except ImportError:
-            return False
-            
-    def export(self, results, output_dir):
-        """Export executive PowerPoint presentation"""
-        if not self.available:
-            return None
-            
-        try:
-            import pptx
-            from pptx.util import Inches
-            
-            prs = pptx.Presentation()
-            
-            # Title slide
-            title_slide_layout = prs.slide_layouts[0]
-            slide = prs.slides.add_slide(title_slide_layout)
-            title = slide.shapes.title
-            subtitle = slide.placeholders[1]
-            
-            title.text = "Security Assessment"
-            subtitle.text = f"Executive Summary\nTarget: {results.get('target', 'Unknown')}"
-            
-            # Executive Summary slide
-            bullet_slide_layout = prs.slide_layouts[1]
-            slide = prs.slides.add_slide(bullet_slide_layout)
-            shapes = slide.shapes
-            
-            title_shape = shapes.title
-            body_shape = shapes.placeholders[1]
-            
-            title_shape.text = 'Executive Summary'
-            
-            tf = body_shape.text_frame
-            tf.text = 'Key Findings:'
-            
-            p = tf.add_paragraph()
-            vuln_count = self._count_vulnerabilities(results)
-            p.text = f'Total vulnerabilities: {vuln_count}'
-            p.level = 1
-            
-            p = tf.add_paragraph()
-            p.text = f'Critical vulnerabilities: {self._count_critical_vulnerabilities(results)}'
-            p.level = 1
-            
-            p = tf.add_paragraph()
-            p.text = f'High vulnerabilities: {self._count_high_vulnerabilities(results)}'
-            p.level = 1
-            
-            # Recommendations slide
-            slide = prs.slides.add_slide(bullet_slide_layout)
-            shapes = slide.shapes
-            
-            title_shape = shapes.title
-            body_shape = shapes.placeholders[1]
-            
-            title_shape.text = 'Recommendations'
-            
-            tf = body_shape.text_frame
-            tf.text = 'Immediate Actions Required:'
-            
-            recommendations = [
-                'Address all critical vulnerabilities immediately',
-                'Implement proper SSL/TLS configuration',
-                'Review network service configurations',
-                'Establish regular security assessments'
-            ]
-            
-            for rec in recommendations:
-                p = tf.add_paragraph()
-                p.text = rec
-                p.level = 1
-                
-            pptx_file = Path(output_dir) / "security_assessment_executive.pptx"
-            prs.save(pptx_file)
-            
-            return str(pptx_file)
-            
-        except Exception as e:
-            logging.error(f"PowerPoint export failed: {e}")
-            return None
-            
-    def _count_vulnerabilities(self, results):
-        """Count total vulnerabilities"""
-        count = 0
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            count += len(results['web_scan']['vulnerabilities'])
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                count += len(port_data.get('vulnerabilities', []))
-        return count
-        
-    def _count_critical_vulnerabilities(self, results):
-        """Count critical vulnerabilities"""
-        count = 0
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            for vuln in results['web_scan']['vulnerabilities']:
-                if vuln.get('severity', '').lower() == 'critical':
-                    count += 1
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                for vuln in port_data.get('vulnerabilities', []):
-                    if vuln.get('severity', '').lower() == 'critical':
-                        count += 1
-        return count
-        
-    def _count_high_vulnerabilities(self, results):
-        """Count high severity vulnerabilities"""
-        count = 0
-        if 'web_scan' in results and 'vulnerabilities' in results['web_scan']:
-            for vuln in results['web_scan']['vulnerabilities']:
-                if vuln.get('severity', '').lower() == 'high':
-                    count += 1
-        if 'security_analysis' in results:
-            ssl_analysis = results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                for vuln in port_data.get('vulnerabilities', []):
-                    if vuln.get('severity', '').lower() == 'high':
-                        count += 1
-        return count
-
-
-class AdvancedReportGenerator:
-    """Advanced reporting with visualizations, risk scoring, and multiple formats"""
-    
-    def __init__(self, output_dir, results, target, config=None):
-        self.output_dir = Path(output_dir)
-        self.results = results
-        self.target = target
-        self.config = config or {}
-        self.logger = logging.getLogger(__name__)
-        self.risk_scorer = RiskScorer(config)
-        
-        # Enhanced components
-        self.cvss_calculator = CVSSCalculator()
-        self.compliance_mapper = ComplianceMapper()
-        self.evidence_collector = EvidenceCollector()
-        self.baseline_tracker = BaselineTracker()
-        
-        # Multi-format exporters
-        self.exporters = {
-            'csv': CSVExporter(),
-            'excel': ExcelExporter() if self._check_excel_support() else None,
-            'word': WordExporter() if self._check_word_support() else None,
-            'powerpoint': PowerPointExporter() if self._check_pptx_support() else None
-        }
-        
-    def _check_excel_support(self):
-        """Check if Excel export is supported"""
-        try:
-            import openpyxl
-            return True
-        except ImportError:
-            return False
-            
-    def _check_word_support(self):
-        """Check if Word export is supported"""
-        try:
-            import docx
-            return True
-        except ImportError:
-            return False
-            
-    def _check_pptx_support(self):
-        """Check if PowerPoint export is supported"""
-        try:
-            import pptx
-            return True
-        except ImportError:
-            return False
-        
-    def generate_all_reports(self):
-        """Generate all available report formats with enhanced features"""
-        try:
-            self.logger.info("Generating enhanced advanced reports...")
-            
-            # Calculate comprehensive risk assessment with CVSS scoring
-            risk_assessment = self.risk_scorer.calculate_risk_score(self.results)
-            
-            # Assess compliance frameworks
-            compliance_status = self.compliance_mapper.assess_compliance(self.results)
-            
-            # Generate reports
-            reports_generated = []
-            
-            # 1. Executive Summary PDF
-            if self._generate_executive_pdf(risk_assessment):
-                reports_generated.append('Executive PDF')
-                
-            # 2. Technical Report PDF
-            if self._generate_technical_pdf(risk_assessment):
-                reports_generated.append('Technical PDF')
-                
-            # 3. Risk Assessment with CVSS scores
-            if self._generate_enhanced_risk_json(risk_assessment):
-                reports_generated.append('Enhanced Risk Assessment JSON')
-                
-            # 4. Compliance Framework Reports
-            if self._generate_enhanced_compliance_report(compliance_status):
-                reports_generated.append('Compliance Framework Report')
-                
-            # 5. Multi-format Data Exports
-            export_results = self._generate_multiformat_exports()
-            if export_results:
-                reports_generated.extend(export_results)
-                
-            # 7. Evidence Collection
-            if self._collect_and_organize_evidence():
-                reports_generated.append('Evidence Collection')
-                
-            # 8. Historical Baseline Update
-            if self._update_security_baseline():
-                reports_generated.append('Baseline Tracking')
-                
-            self.logger.info(f"Generated enhanced reports: {', '.join(reports_generated)}")
-            return reports_generated
-            
-        except Exception as e:
-            self.logger.error(f"Enhanced report generation failed: {str(e)}")
-            import traceback
-            self.logger.error(f"Traceback: {traceback.format_exc()}")
-            return []
-            
-    def _generate_risk_json(self, risk_assessment):
-        """Generate detailed risk assessment JSON"""
-        try:
-            risk_file = self.output_dir / 'risk_assessment.json'
-            
-            # Enhanced risk data
-            enhanced_risk = {
-                'target': self.target,
-                'scan_timestamp': datetime.now().isoformat(),
-                'risk_assessment': risk_assessment,
-                'detailed_findings': self._compile_detailed_findings(),
-                'compliance_status': self._assess_compliance(),
-                'executive_summary': self._generate_executive_summary(risk_assessment)
-            }
-            
-            with open(risk_file, 'w') as f:
-                json.dump(enhanced_risk, f, indent=2, default=str)
-                
-            self.logger.info(f"Risk assessment JSON saved to {risk_file}")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Risk JSON generation failed: {str(e)}")
-            return False
-            
-    def _compile_detailed_findings(self):
-        """Compile detailed security findings"""
-        findings = {
-            'vulnerabilities': [],
-            'misconfigurations': [],
-            'exposures': [],
-            'certificates': []
-        }
-        
-        # Security analysis findings
-        security_results = self.results.get('security_analysis', {})
-        ssl_analysis = security_results.get('ssl_analysis', {})
-        
-        for port_key, port_data in ssl_analysis.items():
-            port = port_key.replace('port_', '')
-            
-            # Vulnerabilities
-            for vuln in port_data.get('vulnerabilities', []):
-                findings['vulnerabilities'].append({
-                    'port': port,
-                    'severity': vuln.get('severity'),
-                    'type': vuln.get('type'),
-                    'name': vuln.get('name'),
-                    'description': vuln.get('description')
-                })
-                
-            # Certificate issues
-            cert_info = port_data.get('certificate')
-            if cert_info:
-                findings['certificates'].append({
-                    'port': port,
-                    'subject': cert_info.get('subject', {}),
-                    'issuer': cert_info.get('issuer', {}),
-                    'expiry': cert_info.get('not_after'),
-                    'fingerprint': cert_info.get('sha256_fingerprint')
-                })
-                
-        return findings
-        
-    def _assess_compliance(self):
-        """Assess compliance with common frameworks"""
-        compliance = {
-            'owasp_top_10': self._check_owasp_compliance(),
-            'nist_framework': self._check_nist_compliance(),
-            'pci_dss': self._check_pci_compliance()
-        }
-        return compliance
-        
-    def _check_owasp_compliance(self):
-        """Check OWASP Top 10 compliance"""
-        owasp_checks = {
-            'A02_cryptographic_failures': self._check_crypto_failures(),
-            'A05_security_misconfiguration': self._check_security_misconfig(),
-            'A06_vulnerable_components': self._check_vulnerable_components(),
-            'A07_identification_failures': self._check_auth_failures()
-        }
-        return owasp_checks
-        
-    def _check_crypto_failures(self):
-        """Check for cryptographic failures"""
-        issues = []
-        security_results = self.results.get('security_analysis', {})
-        ssl_analysis = security_results.get('ssl_analysis', {})
-        
-        for port_data in ssl_analysis.values():
-            protocols = port_data.get('protocols', [])
-            for proto in protocols:
-                if proto.get('supported') and proto.get('name') in ['SSLv2', 'SSLv3', 'TLSv1.0']:
-                    issues.append(f"Weak protocol {proto.get('name')} supported")
-                    
-        return {'status': 'fail' if issues else 'pass', 'issues': issues}
-        
-    def _check_security_misconfig(self):
-        """Check for security misconfigurations"""
-        issues = []
-        security_results = self.results.get('security_analysis', {})
-        ssl_analysis = security_results.get('ssl_analysis', {})
-        
-        for port_data in ssl_analysis.values():
-            headers = port_data.get('security_headers', {})
-            required_headers = ['Strict-Transport-Security', 'Content-Security-Policy', 'X-Frame-Options']
-            for header in required_headers:
-                if not headers.get(header, {}).get('present'):
-                    issues.append(f"Missing security header: {header}")
-                    
-        return {'status': 'fail' if issues else 'pass', 'issues': issues}
-        
-    def _check_vulnerable_components(self):
-        """Check for vulnerable components"""
-        issues = []
-        
-        # Check for expired certificates
-        security_results = self.results.get('security_analysis', {})
-        ssl_analysis = security_results.get('ssl_analysis', {})
-        
-        for port_data in ssl_analysis.values():
-            cert_info = port_data.get('certificate')
-            if cert_info:
-                try:
-                    from datetime import datetime
-                    if cert_info.get('not_after'):
-                        expiry = datetime.fromisoformat(cert_info['not_after'].replace('Z', '+00:00'))
-                        if expiry < datetime.now():
-                            issues.append("Expired SSL certificate detected")
-                except Exception:
-                    pass
-                    
-        return {'status': 'fail' if issues else 'pass', 'issues': issues}
-        
-    def _check_auth_failures(self):
-        """Check for authentication failures"""
-        # This would be enhanced with actual auth testing results
-        return {'status': 'unknown', 'issues': ['Authentication testing not implemented']}
-        
-    def _check_nist_compliance(self):
-        """Check NIST Cybersecurity Framework alignment"""
-        return {
-            'identify': {'status': 'partial', 'score': 75},
-            'protect': {'status': 'partial', 'score': 60},
-            'detect': {'status': 'minimal', 'score': 30},
-            'respond': {'status': 'unknown', 'score': 0},
-            'recover': {'status': 'unknown', 'score': 0}
-        }
-        
-    def _check_pci_compliance(self):
-        """Check PCI DSS compliance indicators"""
-        issues = []
-        
-        # Check for common PCI DSS requirements
-        nmap_results = self.results.get('nmap', {})
-        hosts = nmap_results.get('hosts', [])
-        
-        for host in hosts:
-            ports = host.get('ports', [])
-            for port in ports:
-                if port.get('state') == 'open' and port.get('port') in [21, 23, 135, 139, 445]:
-                    issues.append(f"High-risk port {port.get('port')} is open")
-                    
-        return {'status': 'fail' if issues else 'partial', 'issues': issues}
-        
-    def _generate_executive_summary(self, risk_assessment):
-        """Generate executive summary"""
-        risk_score = risk_assessment.get('total_score', 0)
-        risk_level = risk_assessment.get('risk_level', 'unknown')
-        
-        summary = {
-            'overall_security_posture': f"Risk Level: {risk_level.title()} ({risk_score}/100)",
-            'key_findings': [],
-            'immediate_actions': [],
-            'business_impact': self._assess_business_impact(risk_score)
-        }
-        
-        # Key findings
-        vuln_counts = self._count_vulnerabilities()
-        if vuln_counts['critical_vulns'] > 0:
-            summary['key_findings'].append(f"{vuln_counts['critical_vulns']} critical vulnerabilities identified")
-        if vuln_counts['high_vulns'] > 0:
-            summary['key_findings'].append(f"{vuln_counts['high_vulns']} high-severity vulnerabilities found")
-            
-        # Immediate actions from recommendations
-        recommendations = risk_assessment.get('recommendations', [])
-        for rec in recommendations[:3]:  # Top 3
-            if rec.get('priority') in ['critical', 'high']:
-                summary['immediate_actions'].append(rec.get('title'))
-                
-        return summary
-        
-    def _assess_business_impact(self, risk_score):
-        """Assess business impact based on risk score"""
-        if risk_score >= 70:
-            return "High - Immediate security response required. Potential for significant business disruption."
-        elif risk_score >= 50:
-            return "Medium - Security improvements needed within 30 days. Risk of compliance violations."
-        elif risk_score >= 30:
-            return "Low - Address security gaps as part of regular maintenance cycle."
-        else:
-            return "Minimal - Continue monitoring and maintain current security posture."
-            
-    # Placeholder methods for other report types
-    def _generate_executive_pdf(self, risk_assessment):
-        """Generate executive PDF report"""
-        try:
-            if not HAS_REPORTLAB:
-                self.logger.warning("ReportLab not available, skipping PDF generation")
+                if self.logger:
+                    self.logger.error(f"Failed to initialize scanners: {str(e)}")
+                else:
+                    print(f"Failed to initialize scanners: {str(e)}")
                 return False
+        
+        def run_comprehensive_scan(self, scan_type='full'):
+            """Run comprehensive reconnaissance scan"""
+            try:
+                self.logger.info(f"Starting {scan_type} reconnaissance scan on {self.target}")
                 
-            # PDF generation would be implemented here
-            self.logger.info("Executive PDF generation not yet implemented")
-            return False
-        except Exception as e:
-            self.logger.error(f"Executive PDF generation failed: {str(e)}")
-            return False
-            
-    def _generate_technical_pdf(self, risk_assessment):
-        """Generate technical PDF report"""
-        try:
-            if not HAS_REPORTLAB:
-                self.logger.warning("ReportLab not available, skipping technical PDF generation")
-                return False
+                # Initialize scanners
+                if not self.initialize_scanners():
+                    return False
                 
-            # Technical PDF generation would be implemented here
-            self.logger.info("Technical PDF generation not yet implemented")
-            return False
-        except Exception as e:
-            self.logger.error(f"Technical PDF generation failed: {str(e)}")
-            return False
-            
-    def _generate_compliance_report(self, risk_assessment):
-        """Generate compliance report"""
-        try:
-            compliance_file = self.output_dir / 'compliance_report.json'
-            
-            compliance_data = {
-                'target': self.target,
-                'assessment_date': datetime.now().isoformat(),
-                'frameworks': self._assess_compliance(),
-                'risk_assessment': risk_assessment,
-                'recommendations': self._generate_compliance_recommendations()
-            }
-            
-            with open(compliance_file, 'w') as f:
-                json.dump(compliance_data, f, indent=2, default=str)
+                # Run scans based on type
+                if scan_type in ['full', 'port', 'basic']:
+                    self.run_port_scan()
                 
-            self.logger.info(f"Compliance report saved to {compliance_file}")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Compliance report generation failed: {str(e)}")
-            return False
-            
-    def _generate_compliance_recommendations(self):
-        """Generate compliance-specific recommendations"""
-        recommendations = [
-            {
-                'framework': 'OWASP',
-                'requirement': 'A02 - Cryptographic Failures',
-                'status': 'non-compliant',
-                'recommendation': 'Disable weak SSL/TLS protocols (SSLv2, SSLv3, TLSv1.0)'
-            },
-            {
-                'framework': 'NIST',
-                'requirement': 'PR.DS-2 - Data-in-transit protection',
-                'status': 'partial',
-                'recommendation': 'Implement HSTS and strong cipher suites'
-            }
-        ]
-        return recommendations
-        
-    def _generate_csv_export(self):
-        """Generate CSV data export"""
-        try:
-            import csv
-            
-            # Vulnerabilities CSV
-            vuln_file = self.output_dir / 'vulnerabilities.csv'
-            with open(vuln_file, 'w', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(['Port', 'Severity', 'Type', 'Name', 'Description'])
+                if scan_type in ['full', 'subdomain', 'discovery']:
+                    self.run_subdomain_enumeration()
                 
-                security_results = self.results.get('security_analysis', {})
-                ssl_analysis = security_results.get('ssl_analysis', {})
+                if scan_type in ['full', 'web']:
+                    self.run_web_scan()
                 
-                for port_key, port_data in ssl_analysis.items():
-                    port = port_key.replace('port_', '')
-                    for vuln in port_data.get('vulnerabilities', []):
-                        writer.writerow([
-                            port,
-                            vuln.get('severity', ''),
-                            vuln.get('type', ''),
-                            vuln.get('name', ''),
-                            vuln.get('description', '')
-                        ])
-                        
-            # Ports CSV
-            ports_file = self.output_dir / 'open_ports.csv'
-            with open(ports_file, 'w', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(['Host', 'Port', 'Protocol', 'State', 'Service', 'Version'])
+                if scan_type in ['full', 'security', 'ssl']:
+                    self.run_security_scan()
                 
-                nmap_results = self.results.get('nmap', {})
-                hosts = nmap_results.get('hosts', [])
+                if scan_type in ['full', 'osint']:
+                    self.run_osint_collection()
                 
-                for host in hosts:
-                    host_ip = host.get('address', '')
-                    for port in host.get('ports', []):
-                        writer.writerow([
-                            host_ip,
-                            port.get('port', ''),
-                            port.get('protocol', ''),
-                            port.get('state', ''),
-                            port.get('service', ''),
-                            port.get('version', '')
-                        ])
-                        
-            self.logger.info(f"CSV exports saved to {vuln_file} and {ports_file}")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"CSV export generation failed: {str(e)}")
-            return False
-            
-    def _generate_enhanced_dashboard(self, risk_assessment, compliance_status):
-        """Dashboard generation removed - will be implemented later"""
-        pass
-            
-    def _create_interactive_dashboard(self, risk_assessment, compliance_status):
-        """Dashboard generation removed - will be implemented later"""
-        pass
-        """Create fully interactive HTML dashboard with advanced features"""
-        
-        # Calculate comprehensive statistics
-        vuln_stats = self._calculate_vulnerability_statistics()
-        network_stats = self._calculate_network_statistics()
-        
-        html_content = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Security Dashboard - {self.target}</title>
-    
-    <!-- External Libraries for Advanced Interactive Visualizations -->
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    
-    <style>
-        {self._get_interactive_dashboard_css()}
-    </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <!-- Interactive Navigation & Controls -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="#"><i class="fas fa-shield-alt"></i> Security Dashboard</a>
-                <div class="navbar-nav ms-auto">
-                    <div class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="viewDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-eye"></i> Views
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="switchView('executive')">Executive Summary</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="switchView('technical')">Technical Details</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="switchView('compliance')">Compliance View</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="switchView('timeline')">Timeline View</a></li>
-                        </ul>
-                    </div>
-                    <div class="nav-item">
-                        <button class="btn btn-outline-light btn-sm" onclick="toggleFullscreen()">
-                            <i class="fas fa-expand-arrows-alt"></i> Fullscreen
-                        </button>
-                    </div>
-                    <div class="nav-item">
-                        <button class="btn btn-outline-success btn-sm ms-2" onclick="exportDashboard()">
-                            <i class="fas fa-download"></i> Export
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </nav>
-        
-        <!-- Real-time Status Bar -->
-        <div class="alert alert-info alert-dismissible fade show m-0" role="alert">
-            <i class="fas fa-info-circle"></i> <span id="statusMessage">Dashboard loaded successfully</span>
-            <div class="float-end">
-                <small>Last Updated: <span id="lastUpdate">{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</span></small>
-                <button class="btn btn-sm btn-outline-primary ms-2" onclick="refreshData()">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        
-        <!-- Interactive Filters Panel -->
-        <div class="filters-panel bg-light border-bottom">
-            <div class="container-fluid py-3">
-                <div class="row align-items-center">
-                    <div class="col-md-3">
-                        <label class="form-label">Severity Filter:</label>
-                        <select class="form-select form-select-sm" id="severityFilter" onchange="applyFilters()">
-                            <option value="all">All Severities</option>
-                            <option value="critical">Critical Only</option>
-                            <option value="high">High & Above</option>
-                            <option value="medium">Medium & Above</option>
-                            <option value="low">Low & Above</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Vulnerability Type:</label>
-                        <select class="form-select form-select-sm" id="typeFilter" onchange="applyFilters()">
-                            <option value="all">All Types</option>
-                            <option value="network">Network</option>
-                            <option value="web">Web Application</option>
-                            <option value="ssl">SSL/TLS</option>
-                            <option value="config">Configuration</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Date Range:</label>
-                        <select class="form-select form-select-sm" id="dateFilter" onchange="applyFilters()">
-                            <option value="all">All Time</option>
-                            <option value="today">Today</option>
-                            <option value="week">Last 7 Days</option>
-                            <option value="month">Last 30 Days</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Quick Search:</label>
-                        <input type="text" class="form-control form-control-sm" id="searchFilter" 
-                               placeholder="Search vulnerabilities..." onkeyup="applyFilters()">
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Main Dashboard Content -->
-        <main class="dashboard-main">
-            <!-- Executive Summary Section -->
-            <section id="executiveView" class="dashboard-section py-4">
-                <div class="container-fluid">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2><i class="fas fa-tachometer-alt"></i> Executive Overview</h2>
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="zoomChart('all')">
-                                <i class="fas fa-search-plus"></i> Zoom All
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetCharts()">
-                                <i class="fas fa-undo"></i> Reset
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Interactive KPI Cards -->
-                    <div class="row mb-4">
-                        {self._generate_interactive_kpi_cards(vuln_stats, network_stats, risk_assessment)}
-                    </div>
-                    
-                    <!-- Advanced Interactive Charts Grid -->
-                    <div class="row">
-                        <div class="col-lg-6 mb-4">
-                            <div class="card chart-card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5><i class="fas fa-chart-pie"></i> Risk Distribution</h5>
-                                    <div class="chart-controls">
-                                        <button class="btn btn-sm btn-outline-primary" onclick="toggleChartType('riskChart', 'pie')">
-                                            <i class="fas fa-chart-pie"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="toggleChartType('riskChart', 'doughnut')">
-                                            <i class="fas fa-circle-notch"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="downloadChart('riskChart')">
-                                            <i class="fas fa-download"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div id="riskChart" style="height: 350px;"></div>
-                                    <div class="chart-summary mt-2">
-                                        <small class="text-muted">Click segments for detailed breakdown</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-6 mb-4">
-                            <div class="card chart-card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5><i class="fas fa-chart-bar"></i> Vulnerability Trends</h5>
-                                    <div class="chart-controls">
-                                        <button class="btn btn-sm btn-outline-primary" onclick="toggleChartType('vulnTrendChart', 'bar')">
-                                            <i class="fas fa-chart-bar"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="toggleChartType('vulnTrendChart', 'line')">
-                                            <i class="fas fa-chart-line"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="downloadChart('vulnTrendChart')">
-                                            <i class="fas fa-download"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div id="vulnTrendChart" style="height: 350px;"></div>
-                                    <div class="chart-summary mt-2">
-                                        <small class="text-muted">Hover for details, drag to zoom</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Network Topology & Compliance Charts -->
-                    <div class="row">
-                        <div class="col-lg-8 mb-4">
-                            <div class="card chart-card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5><i class="fas fa-project-diagram"></i> Interactive Network Topology</h5>
-                                    <div class="chart-controls">
-                                        <button class="btn btn-sm btn-outline-primary" onclick="toggleTopologyView('force')">
-                                            <i class="fas fa-snowflake"></i> Force
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="toggleTopologyView('hierarchical')">
-                                            <i class="fas fa-sitemap"></i> Hierarchy
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="toggleTopologyView('circular')">
-                                            <i class="fas fa-circle"></i> Circular
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div id="networkTopology" style="height: 400px;"></div>
-                                    <div class="topology-legend mt-2">
-                                        <small class="text-muted">Drag nodes to reposition • Click for details • Scroll to zoom</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4 mb-4">
-                            <div class="card chart-card">
-                                <div class="card-header">
-                                    <h5><i class="fas fa-shield-alt"></i> Compliance Score</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div id="complianceRadar" style="height: 400px;"></div>
-                                    <div class="mt-2">
-                                        <small class="text-muted">Interactive radar chart</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Technical Details Section -->
-            <section id="technicalView" class="dashboard-section py-4" style="display: none;">
-                <div class="container-fluid">
-                    <h2><i class="fas fa-cogs"></i> Technical Analysis</h2>
-                    
-                    <!-- Interactive Data Tables -->
-                    <div class="row">
-                        <div class="col-12 mb-4">
-                            <div class="card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5><i class="fas fa-table"></i> Vulnerability Details</h5>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="exportTable('vulnerabilitiesTable')">
-                                            <i class="fas fa-file-csv"></i> Export CSV
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleTableView()">
-                                            <i class="fas fa-expand"></i> Expand
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <table id="vulnerabilitiesTable" class="table table-striped table-hover">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Type/Source</th>
-                                                <th>Severity</th>
-                                                <th>Description</th>
-                                                <th>CVSS Score</th>
-                                                <th>Vector</th>
-                                                <th>CWE</th>
-                                                <th>Confidence</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {self._generate_interactive_vulnerability_rows()}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Network Services Table -->
-                    <div class="row">
-                        <div class="col-12 mb-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5><i class="fas fa-network-wired"></i> Network Services</h5>
-                                </div>
-                                <div class="card-body">
-                                    <table id="servicesTable" class="table table-striped">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th>Host</th>
-                                                <th>Port</th>
-                                                <th>Service</th>
-                                                <th>Version</th>
-                                                <th>Risk Level</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {self._generate_interactive_services_rows()}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Compliance View Section -->
-            <section id="complianceView" class="dashboard-section py-4" style="display: none;">
-                <div class="container-fluid">
-                    <h2><i class="fas fa-clipboard-check"></i> Compliance Framework Analysis</h2>
-                    <div class="row">
-                        {self._generate_interactive_compliance_cards(compliance_status)}
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Timeline View Section -->
-            <section id="timelineView" class="dashboard-section py-4" style="display: none;">
-                <div class="container-fluid">
-                    <h2><i class="fas fa-clock"></i> Assessment Timeline</h2>
-                    <div class="card">
-                        <div class="card-body">
-                            <div id="timelineChart" style="height: 500px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-    
-    <!-- Modal for Detailed View -->
-    <div class="modal fade" id="detailModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="detailModalTitle">Vulnerability Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="detailModalBody">
-                    <!-- Dynamic content loaded here -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="generateReport()">Generate Report</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Interactive Dashboard JavaScript -->
-    <script>
-        // Global dashboard data
-        const dashboardData = {{
-            vulnerabilities: {json.dumps(vuln_stats.get('vulnerabilities', []), default=str)},
-            networkServices: {json.dumps(network_stats.get('services', []), default=str)},
-            riskAssessment: {json.dumps(risk_assessment, default=str)},
-            complianceStatus: {json.dumps(compliance_status, default=str)},
-            target: '{self.target}',
-            timestamp: '{datetime.now().isoformat()}'
-        }};
-        
-        // Initialize dashboard when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {{
-            initializeDashboard();
-            {self._generate_advanced_interactive_js()}
-        }});
-    </script>
-</body>
-</html>
-        """
-        
-        return html_content
-        
-    def _get_interactive_dashboard_css(self):
-        """Dashboard CSS removed - will be implemented later"""
-        pass
-        
-    def _generate_advanced_interactive_js(self):
-        """Dashboard JavaScript removed - will be implemented later"""
-        pass
-        
-    def _generate_advanced_interactive_js(self):
-        """Generate advanced interactive JavaScript for dashboard functionality"""
-        return """
-        // Initialize Dashboard
-        function initializeDashboard() {
-            console.log('🚀 Initializing Interactive Security Dashboard');
-            
-            // Initialize data tables with advanced features
-            initializeDataTables();
-            
-            // Initialize interactive charts
-            initializeCharts();
-            
-            // Setup event listeners
-            setupEventListeners();
-            
-            // Initialize real-time features
-            initializeRealTimeFeatures();
-            
-            console.log('✅ Dashboard initialization complete');
-        }
-        
-        // Initialize DataTables with advanced features
-        function initializeDataTables() {
-            // Vulnerabilities table
-            $('#vulnerabilitiesTable').DataTable({
-                responsive: true,
-                pageLength: 25,
-                order: [[4, 'desc']], // Sort by CVSS score
-                dom: 'Bfrtip',
-                buttons: [
-                    'copy', 'csv', 'excel', 'pdf', 'print'
-                ],
-                columnDefs: [
-                    { type: 'num', targets: [4] }, // CVSS score column
-                    { orderable: false, targets: [8] } // Actions column
-                ],
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search vulnerabilities..."
-                }
-            });
-        }
-        
-        // Initialize Interactive Charts
-        function initializeCharts() {
-            createRiskDistributionChart();
-            createVulnerabilityTrendChart();
-            createNetworkTopology();
-            createComplianceRadar();
-        }
-        
-        // Risk Distribution Chart (Interactive Pie/Doughnut)
-        function createRiskDistributionChart() {
-            const ctx = document.getElementById('riskChart');
-            if (!ctx) return;
-            
-            const data = {
-                labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
-                datasets: [{
-                    data: calculateRiskDistribution(),
-                    backgroundColor: [
-                        '#dc3545', '#fd7e14', '#ffc107', '#28a745', '#6c757d'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#fff',
-                    hoverBorderWidth: 4
-                }]
-            };
-            
-            window.riskChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: data,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label;
-                                    const value = context.parsed;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    onClick: function(event, elements) {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const severity = data.labels[index];
-                            drillDownBySeverity(severity);
-                        }
-                    },
-                    animation: {
-                        animateScale: true,
-                        animateRotate: true
-                    }
-                }
-            });
-        }
-        
-        // Interactive Network Topology with D3.js
-        function createNetworkTopology() {
-            const container = d3.select('#networkTopology');
-            container.selectAll('*').remove(); // Clear existing
-            
-            const width = 600;
-            const height = 400;
-            
-            const svg = container.append('svg')
-                .attr('width', '100%')
-                .attr('height', height)
-                .attr('viewBox', `0 0 ${width} ${height}`);
+                if scan_type in ['full', 'screenshot']:
+                    self.run_screenshot_capture()
                 
-            // Create force simulation
-            const simulation = d3.forceSimulation()
-                .force('link', d3.forceLink().id(d => d.id))
-                .force('charge', d3.forceManyBody().strength(-300))
-                .force('center', d3.forceCenter(width / 2, height / 2));
-                
-            // Process network data
-            const networkData = processNetworkData();
-            
-            // Create links
-            const link = svg.append('g')
-                .selectAll('line')
-                .data(networkData.links)
-                .enter().append('line')
-                .attr('stroke', '#999')
-                .attr('stroke-opacity', 0.6)
-                .attr('stroke-width', d => Math.sqrt(d.value));
-                
-            // Create nodes
-            const node = svg.append('g')
-                .selectAll('circle')
-                .data(networkData.nodes)
-                .enter().append('circle')
-                .attr('r', d => d.type === 'host' ? 20 : 10)
-                .attr('fill', d => getNodeColor(d))
-                .call(d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended));
-                    
-            // Add labels
-            const label = svg.append('g')
-                .selectAll('text')
-                .data(networkData.nodes)
-                .enter().append('text')
-                .text(d => d.label)
-                .attr('font-size', '12px')
-                .attr('dx', 15)
-                .attr('dy', 4);
-                
-            // Add tooltips
-            node.append('title')
-                .text(d => `${d.label}\\nType: ${d.type}\\nRisk: ${d.risk || 'Unknown'}`);
-                
-            // Update positions
-            simulation.nodes(networkData.nodes)
-                .on('tick', ticked);
-                
-            simulation.force('link')
-                .links(networkData.links);
-                
-            function ticked() {
-                link
-                    .attr('x1', d => d.source.x)
-                    .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
-                    .attr('y2', d => d.target.y);
-                    
-                node
-                    .attr('cx', d => d.x)
-                    .attr('cy', d => d.y);
-                    
-                label
-                    .attr('x', d => d.x)
-                    .attr('y', d => d.y);
-            }
-            
-            // Drag functions
-            function dragstarted(event, d) {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-            }
-            
-            function dragged(event, d) {
-                d.fx = event.x;
-                d.fy = event.y;
-            }
-            
-            function dragended(event, d) {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
-            }
-        }
-        
-        // Compliance Radar Chart
-        function createComplianceRadar() {
-            const container = document.getElementById('complianceRadar');
-            if (!container) return;
-            
-            const options = {
-                series: [{
-                    name: 'Compliance Score',
-                    data: getComplianceScores()
-                }],
-                chart: {
-                    height: 350,
-                    type: 'radar'
-                },
-                colors: ['#667eea'],
-                xaxis: {
-                    categories: ['OWASP', 'NIST', 'PCI DSS', 'ISO 27001']
-                }
-            };
-            
-            window.complianceChart = new ApexCharts(container, options);
-            window.complianceChart.render();
-        }
-        
-        // Vulnerability Trend Chart
-        function createVulnerabilityTrendChart() {
-            const ctx = document.getElementById('vulnTrendChart');
-            if (!ctx) return;
-            
-            const data = {
-                labels: generateDateLabels(),
-                datasets: [{
-                    label: 'Critical',
-                    data: generateTrendData('critical'),
-                    borderColor: '#dc3545',
-                    fill: false
-                }, {
-                    label: 'High',
-                    data: generateTrendData('high'),
-                    borderColor: '#fd7e14',
-                    fill: false
-                }]
-            };
-            
-            window.vulnTrendChart = new Chart(ctx, {
-                type: 'line',
-                data: data,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-        
-        // Event Listeners Setup
-        function setupEventListeners() {
-            // Keyboard shortcuts
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey || e.metaKey) {
-                    switch(e.key) {
-                        case 'f':
-                            e.preventDefault();
-                            toggleFullscreen();
-                            break;
-                        case 'r':
-                            e.preventDefault();
-                            refreshData();
-                            break;
-                    }
-                }
-            });
-        }
-        
-        // Real-time Features
-        function initializeRealTimeFeatures() {
-            setInterval(updateLastRefreshTime, 30000);
-        }
-        
-        // Utility Functions
-        function switchView(viewName) {
-            document.querySelectorAll('.dashboard-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            
-            const targetSection = document.getElementById(viewName + 'View');
-            if (targetSection) {
-                targetSection.style.display = 'block';
-            }
-            
-            updateStatusMessage(`Switched to ${viewName} view`);
-        }
-        
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
-        }
-        
-        function exportDashboard() {
-            const exportData = {
-                timestamp: new Date().toISOString(),
-                target: dashboardData.target,
-                vulnerabilities: dashboardData.vulnerabilities
-            };
-            
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `security-dashboard-${dashboardData.target}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        function refreshData() {
-            updateStatusMessage('Refreshing dashboard data...');
-            setTimeout(() => {
-                updateLastRefreshTime();
-                updateStatusMessage('Dashboard refreshed successfully');
-            }, 2000);
-        }
-        
-        function applyFilters() {
-            const severity = document.getElementById('severityFilter').value;
-            const type = document.getElementById('typeFilter').value;
-            const search = document.getElementById('searchFilter').value.toLowerCase();
-            
-            const table = $('#vulnerabilitiesTable').DataTable();
-            table.search('').columns().search('').draw();
-            
-            if (severity !== 'all' || type !== 'all' || search) {
-                updateStatusMessage(`Filters applied: ${severity} severity, ${type} type`);
-            }
-        }
-        
-        function drillDown(category) {
-            switch(category) {
-                case 'risk':
-                case 'vulnerabilities':
-                case 'network':
-                case 'cvss':
-                    switchView('technical');
-                    break;
-            }
-        }
-        
-        function showVulnDetails(index) {
-            const vuln = dashboardData.vulnerabilities[index];
-            if (!vuln) return;
-            
-            const modalTitle = document.getElementById('detailModalTitle');
-            const modalBody = document.getElementById('detailModalBody');
-            
-            modalTitle.textContent = `Vulnerability Details - ${vuln.type || 'Unknown'}`;
-            modalBody.innerHTML = `
-                <p><strong>Description:</strong> ${vuln.description || 'No description'}</p>
-                <p><strong>Severity:</strong> ${vuln.severity || 'Unknown'}</p>
-                <p><strong>CVSS Score:</strong> ${vuln.cvss_score || 'N/A'}</p>
-            `;
-            
-            $('#detailModal').modal('show');
-        }
-        
-        function markResolved(index) {
-            updateStatusMessage(`Marking vulnerability ${index + 1} as resolved...`);
-        }
-        
-        function updateStatusMessage(message) {
-            const statusElement = document.getElementById('statusMessage');
-            if (statusElement) {
-                statusElement.textContent = message;
-            }
-        }
-        
-        function updateLastRefreshTime() {
-            const lastUpdateElement = document.getElementById('lastUpdate');
-            if (lastUpdateElement) {
-                lastUpdateElement.textContent = new Date().toLocaleString();
-            }
-        }
-        
-        // Data processing utilities
-        function calculateRiskDistribution() {
-            const vulnerabilities = dashboardData.vulnerabilities || [];
-            const distribution = {critical: 0, high: 0, medium: 0, low: 0, info: 0};
-            
-            vulnerabilities.forEach(vuln => {
-                const severity = (vuln.severity || 'info').toLowerCase();
-                if (distribution.hasOwnProperty(severity)) {
-                    distribution[severity]++;
-                }
-            });
-            
-            return [distribution.critical, distribution.high, distribution.medium, distribution.low, distribution.info];
-        }
-        
-        function generateDateLabels() {
-            const labels = [];
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                labels.push(date.toLocaleDateString());
-            }
-            return labels;
-        }
-        
-        function generateTrendData(severity) {
-            return Array.from({length: 7}, () => Math.floor(Math.random() * 5));
-        }
-        
-        function processNetworkData() {
-            const services = dashboardData.networkServices || [];
-            const nodes = [];
-            const links = [];
-            
-            const hosts = [...new Set(services.map(s => s.host))];
-            hosts.forEach((host, index) => {
-                nodes.push({
-                    id: `host-${index}`,
-                    label: host,
-                    type: 'host',
-                    risk: 'medium'
-                });
-            });
-            
-            services.forEach((service, index) => {
-                const serviceId = `service-${index}`;
-                const hostIndex = hosts.indexOf(service.host);
-                
-                nodes.push({
-                    id: serviceId,
-                    label: `${service.port}`,
-                    type: 'service',
-                    risk: service.risk || 'low'
-                });
-                
-                links.push({
-                    source: `host-${hostIndex}`,
-                    target: serviceId,
-                    value: 1
-                });
-            });
-            
-            return {nodes, links};
-        }
-        
-        function getNodeColor(node) {
-            const colors = {
-                'critical': '#dc3545',
-                'high': '#fd7e14',
-                'medium': '#ffc107',
-                'low': '#28a745',
-                'host': '#6f42c1'
-            };
-            
-            if (node.type === 'host') return colors.host;
-            return colors[node.risk] || colors.low;
-        }
-        
-        function getComplianceScores() {
-            const frameworks = dashboardData.complianceStatus?.frameworks || {};
-            return Object.values(frameworks).map(f => f.score || 0);
-        }
-        
-        function toggleChartType(chartId, newType) {
-            updateStatusMessage(`Switching ${chartId} to ${newType} view...`);
-        }
-        
-        function downloadChart(chartId) {
-            updateStatusMessage(`Downloading ${chartId}...`);
-        }
-        
-        function toggleTopologyView(viewType) {
-            updateStatusMessage(`Switching topology to ${viewType} view...`);
-        }
-        
-        function zoomChart(target) {
-            updateStatusMessage('Zooming charts...');
-        }
-        
-        function resetCharts() {
-            updateStatusMessage('Resetting charts...');
-            initializeCharts();
-        }
-        
-        function exportTable(tableId) {
-            updateStatusMessage(`Exporting ${tableId}...`);
-        }
-        
-        function toggleTableView() {
-            updateStatusMessage('Toggling table view...');
-        }
-        
-        function showComplianceDetails(framework) {
-            updateStatusMessage(`Loading ${framework} compliance details...`);
-        }
-        
-        function generateReport() {
-            updateStatusMessage('Generating detailed report...');
-        }
-        """
-        
-    def _generate_dashboard_assets(self, dashboard_dir):
-        """Generate additional dashboard assets like custom CSS and JS files"""
-        try:
-            # Create custom CSS file
-            css_content = self._get_interactive_dashboard_css()
-            with open(dashboard_dir / 'dashboard.css', 'w') as f:
-                f.write(css_content)
-                
-            # Create custom JavaScript file
-            js_content = self._generate_advanced_interactive_js()
-            with open(dashboard_dir / 'dashboard.js', 'w') as f:
-                f.write(js_content)
-                
-            self.logger.info("Dashboard assets generated successfully")
-            
-        except Exception as e:
-            self.logger.error(f"Failed to generate dashboard assets: {str(e)}")
-            
-    def _generate_interactive_kpi_cards(self, vuln_stats, network_stats, risk_assessment):
-        """Generate interactive KPI cards with animations and drill-down"""
-        total_vulns = vuln_stats.get('total', 0)
-        avg_cvss = sum(vuln_stats.get('cvss_scores', [0])) / max(len(vuln_stats.get('cvss_scores', [1])), 1)
-        critical_vulns = len([v for v in vuln_stats.get('vulnerabilities', []) if v.get('severity') == 'Critical'])
-        high_vulns = len([v for v in vuln_stats.get('vulnerabilities', []) if v.get('severity') == 'High'])
-        
-        risk_level = risk_assessment.get('risk_level', 'unknown').lower()
-        risk_score = risk_assessment.get('total_score', 0)
-        
-        return f"""
-        <div class="col-md-3">
-            <div class="kpi-card {risk_level}" onclick="drillDown('risk')" style="cursor: pointer;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="metric-value pulse">{risk_score:.1f}/100</div>
-                        <div class="metric-label">Risk Score</div>
-                        <small>Level: {risk_assessment.get('risk_level', 'Unknown')}</small>
-                    </div>
-                    <div>
-                        <i class="fas fa-exclamation-triangle fa-3x" style="opacity: 0.3;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <div class="kpi-card {'critical' if critical_vulns > 0 else 'high' if high_vulns > 0 else 'low'}" onclick="drillDown('vulnerabilities')" style="cursor: pointer;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="metric-value">{total_vulns}</div>
-                        <div class="metric-label">Vulnerabilities</div>
-                        <small>Critical: {critical_vulns} | High: {high_vulns}</small>
-                    </div>
-                    <div>
-                        <i class="fas fa-bug fa-3x" style="opacity: 0.3;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <div class="kpi-card low" onclick="drillDown('network')" style="cursor: pointer;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="metric-value">{len(network_stats.get('services', []))}</div>
-                        <div class="metric-label">Network Services</div>
-                        <small>Open Ports Discovered</small>
-                    </div>
-                    <div>
-                        <i class="fas fa-network-wired fa-3x" style="opacity: 0.3;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <div class="kpi-card {'high' if avg_cvss >= 7 else 'medium' if avg_cvss >= 4 else 'low'}" onclick="drillDown('cvss')" style="cursor: pointer;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="metric-value">{avg_cvss:.1f}</div>
-                        <div class="metric-label">Avg CVSS Score</div>
-                        <small>Average Severity Rating</small>
-                    </div>
-                    <div>
-                        <i class="fas fa-chart-line fa-3x" style="opacity: 0.3;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        """
-        
-    def _generate_interactive_vulnerability_rows(self):
-        """Generate interactive vulnerability table rows with actions"""
-        vuln_stats = self._calculate_vulnerability_statistics()
-        vulnerabilities = vuln_stats.get('vulnerabilities', [])
-        
-        if not vulnerabilities:
-            return '<tr><td colspan="9" class="text-center text-muted">No vulnerabilities detected</td></tr>'
-        
-        rows = []
-        for i, vuln in enumerate(vulnerabilities[:50]):  # Limit to 50 for performance
-            severity = vuln.get('severity', 'Unknown')
-            cvss_score = vuln.get('cvss_score', 0)
-            cvss_vector = vuln.get('cvss_vector', 'N/A')
-            cwe = vuln.get('cwe', 'N/A')
-            confidence = vuln.get('confidence', 'Unknown')
-            
-            severity_badge = {
-                'Critical': 'danger',
-                'High': 'warning', 
-                'Medium': 'info',
-                'Low': 'success'
-            }.get(severity, 'secondary')
-            
-            row = f"""
-            <tr data-severity="{severity.lower()}" data-type="{vuln.get('type', 'unknown')}" data-cvss="{cvss_score}">
-                <td><strong>VULN-{i+1:03d}</strong></td>
-                <td>
-                    <span class="badge bg-primary">{vuln.get('type', 'Unknown')}</span><br>
-                    <small class="text-muted">{vuln.get('source', 'Unknown')}</small>
-                </td>
-                <td>
-                    <span class="badge bg-{severity_badge}">{severity}</span>
-                </td>
-                <td>
-                    <div class="text-truncate" style="max-width: 300px;" title="{vuln.get('description', 'No description')}">
-                        {vuln.get('description', 'No description')[:100]}...
-                    </div>
-                </td>
-                <td>
-                    <strong class="text-{severity_badge}">{cvss_score:.1f}</strong>
-                </td>
-                <td>
-                    <small><code>{cvss_vector}</code></small>
-                </td>
-                <td>
-                    <span class="badge bg-info">{cwe}</span>
-                </td>
-                <td>
-                    <span class="badge bg-secondary">{confidence}</span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary btn-action" onclick="showVulnDetails({i})">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-success btn-action" onclick="markResolved({i})">
-                        <i class="fas fa-check"></i>
-                    </button>
-                </td>
-            </tr>
-            """
-            rows.append(row)
-        
-        return ''.join(rows)
-        
-    def _generate_interactive_services_rows(self):
-        """Generate interactive network services table rows"""
-        network_stats = self._calculate_network_statistics()
-        services = network_stats.get('services', [])
-        
-        if not services:
-            return '<tr><td colspan="6" class="text-center text-muted">No network services detected</td></tr>'
-        
-        rows = []
-        for service in services:
-            risk_level = service.get('risk', 'Unknown')
-            risk_badge = {
-                'Critical': 'danger',
-                'High': 'warning',
-                'Medium': 'info', 
-                'Low': 'success'
-            }.get(risk_level, 'secondary')
-            
-            row = f"""
-            <tr>
-                <td><strong>{service.get('host', 'Unknown')}</strong></td>
-                <td><span class="badge bg-dark">{service.get('port', 'N/A')}</span></td>
-                <td>{service.get('service', 'Unknown')}</td>
-                <td><small class="text-muted">{service.get('version', 'N/A')}</small></td>
-                <td><span class="badge bg-{risk_badge}">{risk_level}</span></td>
-                <td>
-                    <i class="fas fa-circle text-success" title="Active"></i>
-                    <small class="text-muted ms-1">Active</small>
-                </td>
-            </tr>
-            """
-            rows.append(row)
-        
-        return ''.join(rows)
-        
-    def _generate_interactive_compliance_cards(self, compliance_status):
-        """Generate interactive compliance framework cards"""
-        if not isinstance(compliance_status, dict):
-            compliance_status = {}
-            
-        frameworks = compliance_status.get('frameworks', {})
-        
-        cards = []
-        for name, data in frameworks.items():
-            score = data.get('score', 0)
-            total_controls = data.get('total_controls', 1)
-            passed_controls = data.get('passed_controls', 0)
-            
-            badge_class = 'success' if score >= 80 else 'warning' if score >= 60 else 'danger'
-            
-            card = f"""
-            <div class="col-md-4 mb-4">
-                <div class="card border-{badge_class} chart-card" onclick="showComplianceDetails('{name}')" style="cursor: pointer;">
-                    <div class="card-header bg-{badge_class} text-white">
-                        <h6 class="mb-0">
-                            <i class="fas fa-shield-alt"></i> {name.upper()}
-                            <span class="float-end">{score:.0f}%</span>
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="progress mb-3" style="height: 10px;">
-                            <div class="progress-bar bg-{badge_class}" style="width: {score}%"></div>
-                        </div>
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <h5 class="text-{badge_class}">{passed_controls}</h5>
-                                <small class="text-muted">Passed</small>
-                            </div>
-                            <div class="col-6">
-                                <h5 class="text-danger">{total_controls - passed_controls}</h5>
-                                <small class="text-muted">Failed</small>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <small class="text-muted">Click for detailed breakdown</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            """
-            cards.append(card)
-        
-        return ''.join(cards)
-        
-        html_content = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Executive Security Dashboard - {self.target}</title>
-    
-    <!-- External Libraries for Interactive Visualizations -->
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <style>
-        {self._get_enhanced_dashboard_css()}
-    </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <!-- Header Section -->
-        <header class="dashboard-header bg-dark text-white py-3">
-            <div class="container-fluid">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h1><i class="fas fa-shield-alt"></i> Executive Security Assessment Dashboard</h1>
-                        <p class="mb-0">Target: <strong>{self.target}</strong> | Assessment Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div class="risk-indicator risk-{risk_assessment.get('risk_level', 'unknown').lower()}">
-                            <div class="risk-score">{risk_assessment.get('total_score', 0)}/100</div>
-                            <div class="risk-label">{risk_assessment.get('risk_level', 'UNKNOWN').upper()} RISK</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-        
-        <!-- Executive Summary Cards -->
-        <section class="executive-summary py-4">
-            <div class="container-fluid">
-                <h2>Executive Summary</h2>
-                <div class="row">
-                    {self._generate_enhanced_summary_cards(vuln_stats, network_stats, risk_assessment)}
-                </div>
-            </div>
-        </section>
-        
-        <!-- Interactive Visualizations -->
-        <section class="visualizations py-4">
-            <div class="container-fluid">
-                <h2>Security Analysis Visualizations</h2>
-                <div class="row">
-                    <div class="col-lg-6 mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-chart-pie"></i> Risk Component Breakdown</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="riskBreakdownChart" style="height: 400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-chart-bar"></i> Vulnerability Severity Distribution</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="vulnerabilityChart" style="height: 400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-6 mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-network-wired"></i> Network Topology Map</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="networkTopology" style="height: 400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-clipboard-check"></i> Compliance Framework Status</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="complianceChart" style="height: 400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Detailed Findings Table -->
-        <section class="findings py-4">
-            <div class="container-fluid">
-                <h2>Detailed Scan Results & Analysis</h2>
-                
-                <!-- Network Analysis Section -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        {self._generate_findings_table(vuln_stats)}
-                    </div>
-                </div>
-                
-                <!-- Subdomain Analysis Section -->
-                <div class="card mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h5><i class="fas fa-sitemap"></i> Subdomain Enumeration Results</h5>
-                    </div>
-                    <div class="card-body">
-                        {self._generate_subdomain_details()}
-                    </div>
-                </div>
-                
-                <!-- SSL/TLS Analysis Section -->
-                <div class="card mb-4">
-                    <div class="card-header bg-warning text-white">
-                        <h5><i class="fas fa-lock"></i> SSL/TLS Security Analysis</h5>
-                    </div>
-                    <div class="card-body">
-                        {self._generate_ssl_analysis_details()}
-                    </div>
-                </div>
-                
-                <!-- OSINT Analysis Section -->
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5><i class="fas fa-search"></i> OSINT Collection Results</h5>
-                    </div>
-                    <div class="card-body">
-                        {self._generate_osint_details()}
-                    </div>
-                </div>
-                
-                <!-- Web Application Analysis Section -->
-                <div class="card mb-4">
-                    <div class="card-header bg-success text-white">
-                        <h5><i class="fas fa-globe"></i> Web Application Security Analysis</h5>
-                    </div>
-                    <div class="card-body">
-                        {self._generate_web_analysis_details()}
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Compliance Dashboard -->
-        <section class="compliance py-4">
-            <div class="container-fluid">
-                <h2>Compliance Framework Analysis</h2>
-                <div class="row">
-                    {self._generate_compliance_cards(compliance_status)}
-                </div>
-            </div>
-        </section>
-    </div>
-    
-    <!-- JavaScript for Interactive Charts -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {{
-            {self._generate_interactive_charts_js(risk_assessment, vuln_stats, compliance_status)}
-        }});
-    </script>
-</body>
-</html>
-        """
-        
-        # Substitute template variables with actual values
-        template_vars = {
-            'target': self.target,
-            'scan_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'risk_score': int(risk_assessment.get('total_score', 0)),
-            'risk_level': risk_assessment.get('risk_level', 'unknown').lower(),
-            'total_vulnerabilities': vuln_stats.get('total', 0),
-            'critical_vulns': vuln_stats.get('critical', 0),
-            'high_vulns': vuln_stats.get('high', 0),
-            'medium_vulns': vuln_stats.get('medium', 0),
-            'low_vulns': vuln_stats.get('low', 0),
-            'open_ports': network_stats.get('total_ports', 0),
-            'subdomains_count': len(self.results.get('subdomains', {}).get('subdomains', [])),
-            'cvss_average': self.results.get('summary', {}).get('overall_risk_score', 0)
-        }
-        
-        # Replace template placeholders
-        for key, value in template_vars.items():
-            html_content = html_content.replace(f'{{{ key }}}', str(value))
-            html_content = html_content.replace(f'{{{{ {key} }}}}', str(value))
-            html_content = html_content.replace(f'{{{{ {key}|title }}}}', str(value).title())
-        
-        return html_content
-        
-    def _generate_enhanced_risk_json(self, risk_assessment):
-        """Generate enhanced risk assessment with CVSS scores"""
-        try:
-            # Enhanced risk assessment with detailed vulnerability analysis
-            enhanced_risk = {
-                'target': self.target,
-                'assessment_timestamp': datetime.now().isoformat(),
-                'risk_summary': risk_assessment,
-                'cvss_analysis': self._generate_cvss_analysis(),
-                'vulnerability_details': self._extract_detailed_vulnerabilities(),
-                'network_exposure': self._analyze_network_exposure(),
-                'compliance_gaps': self._identify_compliance_gaps(),
-                'remediation_priorities': self._generate_remediation_priorities(),
-                'historical_comparison': self._get_historical_risk_trends()
-            }
-            
-            risk_file = self.output_dir / 'enhanced_risk_assessment.json'
-            with open(risk_file, 'w') as f:
-                json.dump(enhanced_risk, f, indent=2)
-                
-            self.logger.info(f"Enhanced risk assessment saved to {risk_file}")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Enhanced risk assessment generation failed: {str(e)}")
-            return False
-            
-    def _generate_enhanced_compliance_report(self, compliance_status):
-        """Generate comprehensive compliance framework report"""
-        try:
-            compliance_report = {
-                'target': self.target,
-                'assessment_date': datetime.now().isoformat(),
-                'frameworks_assessed': list(compliance_status.keys()),
-                'compliance_summary': self._generate_compliance_summary(compliance_status),
-                'detailed_analysis': compliance_status,
-                'gap_analysis': self._perform_gap_analysis(compliance_status),
-                'remediation_roadmap': self._create_compliance_roadmap(compliance_status),
-                'certification_readiness': self._assess_certification_readiness(compliance_status)
-            }
-            
-            compliance_file = self.output_dir / 'comprehensive_compliance_report.json'
-            with open(compliance_file, 'w') as f:
-                json.dump(compliance_report, f, indent=2)
-                
-            self.logger.info(f"Comprehensive compliance report saved to {compliance_file}")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Enhanced compliance report generation failed: {str(e)}")
-            return False
-            
-    def _generate_multiformat_exports(self):
-        """Generate exports in multiple formats (Excel, Word, PowerPoint, CSV)"""
-        exported_formats = []
-        
-        try:
-            # Enhanced CSV exports
-            csv_exporter = self.exporters['csv']
-            if csv_exporter:
-                vuln_csv = csv_exporter.export_vulnerabilities(self.results, self.output_dir)
-                network_csv = csv_exporter.export_network_data(self.results, self.output_dir)
-                if vuln_csv and network_csv:
-                    exported_formats.append('Enhanced CSV Exports')
-                    
-            # Excel workbook export
-            excel_exporter = self.exporters['excel']
-            if excel_exporter and excel_exporter.available:
-                excel_file = excel_exporter.export(self.results, self.output_dir)
-                if excel_file:
-                    exported_formats.append('Executive Excel Workbook')
-                    
-            # Word document export
-            word_exporter = self.exporters['word']
-            if word_exporter and word_exporter.available:
-                word_file = word_exporter.export(self.results, self.output_dir)
-                if word_file:
-                    exported_formats.append('Technical Word Report')
-                    
-            # PowerPoint presentation export
-            pptx_exporter = self.exporters['powerpoint']
-            if pptx_exporter and pptx_exporter.available:
-                pptx_file = pptx_exporter.export(self.results, self.output_dir)
-                if pptx_file:
-                    exported_formats.append('Executive PowerPoint Presentation')
-                    
-        except Exception as e:
-            self.logger.error(f"Multi-format export failed: {str(e)}")
-            
-        return exported_formats
-        
-    def _collect_and_organize_evidence(self):
-        """Collect and organize evidence (screenshots, certificates, logs)"""
-        try:
-            evidence_collected = self.evidence_collector.collect_evidence(self.results, self.output_dir)
-            
-            if evidence_collected:
-                # Create evidence index
-                evidence_index = {
-                    'target': self.target,
-                    'collection_timestamp': datetime.now().isoformat(),
-                    'evidence_files': evidence_collected,
-                    'evidence_summary': {
-                        'ssl_certificates': len([e for e in evidence_collected if 'certificate' in e]),
-                        'http_samples': len([e for e in evidence_collected if 'http' in e]),
-                        'log_files': len([e for e in evidence_collected if 'log' in e])
-                    }
-                }
-                
-                evidence_file = self.output_dir / 'evidence' / 'evidence_index.json'
-                with open(evidence_file, 'w') as f:
-                    json.dump(evidence_index, f, indent=2)
-                    
-                self.logger.info(f"Evidence collection completed: {len(evidence_collected)} items")
+                self.logger.info("Comprehensive scan completed successfully")
                 return True
                 
-        except Exception as e:
-            self.logger.error(f"Evidence collection failed: {str(e)}")
-            
-        return False
+            except Exception as e:
+                self.logger.error(f"Comprehensive scan failed: {str(e)}")
+                return False
         
-    def _update_security_baseline(self):
-        """Update security baseline for historical tracking"""
-        try:
-            baseline_updated = self.baseline_tracker.update_baseline(self.results, self.target)
-            
-            if baseline_updated:
-                # Generate trend analysis
-                historical_data = self.baseline_tracker.get_historical_comparison(self.target)
+        def run_port_scan(self):
+            """Run port scanning"""
+            try:
+                self.logger.info("Starting port scan...")
+                self.progress_tracker.start_task("Port Scanning")
                 
-                trend_analysis = {
+                port_results = self.scanners['port'].scan_target(self.target)
+                if port_results:
+                    self.results['nmap_scan'] = port_results
+                    self.logger.info(f"Port scan completed")
+                
+                self.progress_tracker.complete_task("Port Scanning")
+                
+            except Exception as e:
+                self.logger.error(f"Port scan failed: {str(e)}")
+                self.error_handler.handle_error("port_scan", e)
+        
+        def run_subdomain_enumeration(self):
+            """Run subdomain enumeration"""
+            try:
+                self.logger.info("Starting subdomain enumeration...")
+                self.progress_tracker.start_task("Subdomain Enumeration")
+                
+                subdomain_results = self.scanners['subdomain'].enumerate_subdomains(self.target)
+                if subdomain_results:
+                    self.results['subdomains'] = subdomain_results
+                    self.logger.info(f"Subdomain enumeration completed")
+                
+                self.progress_tracker.complete_task("Subdomain Enumeration")
+                
+            except Exception as e:
+                self.logger.error(f"Subdomain enumeration failed: {str(e)}")
+                self.error_handler.handle_error("subdomain_enum", e)
+        
+        def run_web_scan(self):
+            """Run web application scanning"""
+            try:
+                self.logger.info("Starting web application scan...")
+                self.progress_tracker.start_task("Web Application Scanning")
+                
+                web_results = self.scanners['web'].scan_web_applications(self.target)
+                if web_results:
+                    self.results['web_scan'] = web_results
+                    self.logger.info(f"Web scan completed")
+                
+                self.progress_tracker.complete_task("Web Application Scanning")
+                
+            except Exception as e:
+                self.logger.error(f"Web scan failed: {str(e)}")
+                self.error_handler.handle_error("web_scan", e)
+        
+        def run_security_scan(self):
+            """Run security analysis"""
+            try:
+                self.logger.info("Starting security analysis...")
+                self.progress_tracker.start_task("Security Analysis")
+                
+                security_results = self.scanners['security'].analyze_security(self.target)
+                if security_results:
+                    self.results['security_analysis'] = security_results
+                    self.logger.info("Security analysis completed")
+                
+                self.progress_tracker.complete_task("Security Analysis")
+                
+            except Exception as e:
+                self.logger.error(f"Security analysis failed: {str(e)}")
+                self.error_handler.handle_error("security_scan", e)
+        
+        def run_osint_collection(self):
+            """Run OSINT collection"""
+            try:
+                self.logger.info("Starting OSINT collection...")
+                self.progress_tracker.start_task("OSINT Collection")
+                
+                osint_results = self.scanners['osint'].collect_intelligence(self.target)
+                if osint_results:
+                    self.results['osint'] = osint_results
+                    self.logger.info("OSINT collection completed")
+                
+                self.progress_tracker.complete_task("OSINT Collection")
+                
+            except Exception as e:
+                self.logger.error(f"OSINT collection failed: {str(e)}")
+                self.error_handler.handle_error("osint_collection", e)
+        
+        def run_screenshot_capture(self):
+            """Run screenshot capture"""
+            try:
+                self.logger.info("Starting screenshot capture...")
+                self.progress_tracker.start_task("Screenshot Capture")
+                
+                screenshot_results = self.scanners['screenshot'].capture_screenshots(self.target)
+                if screenshot_results:
+                    self.results['screenshots'] = screenshot_results
+                    self.logger.info(f"Screenshot capture completed")
+                
+                self.progress_tracker.complete_task("Screenshot Capture")
+                
+            except Exception as e:
+                self.logger.error(f"Screenshot capture failed: {str(e)}")
+                self.error_handler.handle_error("screenshot_capture", e)
+        
+        def generate_report(self):
+            """Generate reports using the external reporting module"""
+            if not HAS_REPORTING:
+                self.logger.warning("Reporting module not available. Skipping report generation.")
+                return
+                
+            try:
+                self.logger.info("Generating reports...")
+                
+                # Standard reports
+                report_gen = ReportGenerator(self.output_dir, self.results, self.target, self.config)
+                report_gen.generate_markdown_report()
+                report_gen.generate_json_report()
+                
+                # Advanced reporting (if enabled)
+                if self.config and self.config.get('reporting', 'advanced_enabled', True):
+                    self.logger.info("Generating advanced reports...")
+                    advanced_gen = AdvancedReportGenerator(self.output_dir, self.results, self.target, self.config)
+                    
+                    try:
+                        generated_reports = advanced_gen.generate_all_reports()
+                        if generated_reports:
+                            self.logger.info(f"Advanced reports generated: {', '.join(generated_reports)}")
+                        else:
+                            self.logger.warning("No advanced reports were generated")
+                    except Exception as e:
+                        self.logger.error(f"Advanced reporting failed: {str(e)}")
+                
+                self.logger.info("Reports generated successfully")
+                
+            except Exception as e:
+                self.logger.error(f"Report generation failed: {str(e)}")
+        
+        def run_single_target(self, target, scan_type='full'):
+            """Run scan against a single target"""
+            try:
+                self.target = target
+                self.target_type = 'domain' if '.' in target and not target.replace('.', '').isdigit() else 'ip'
+                
+                # Create output directory
+                safe_target = target.replace('.', '_').replace('/', '_')
+                self.output_dir = Path(f"recon_{safe_target}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+                self.output_dir.mkdir(exist_ok=True)
+                
+                # Setup logging
+                self.setup_logging()
+                
+                # Run comprehensive scan
+                success = self.run_comprehensive_scan(scan_type)
+                
+                if success:
+                    # Save results
+                    self.save_results()
+                    # Generate reports
+                    self.generate_report()
+                
+                return success
+                
+            except Exception as e:
+                if self.logger:
+                    self.logger.error(f"Single target scan failed: {str(e)}")
+                else:
+                    print(f"Single target scan failed: {str(e)}")
+                return False
+        
+        def run_multiple_targets(self, targets_file, scan_type='full'):
+            """Run scan against multiple targets from file"""
+            try:
+                with open(targets_file, 'r') as f:
+                    targets = [line.strip() for line in f if line.strip()]
+                
+                success_count = 0
+                for target in targets:
+                    print(f"\n🎯 Scanning target: {target}")
+                    if self.run_single_target(target, scan_type):
+                        success_count += 1
+                
+                return success_count > 0
+                
+            except Exception as e:
+                print(f"Multiple targets scan failed: {str(e)}")
+                return False
+        
+        def save_results(self):
+            """Save scan results to JSON file"""
+            try:
+                results_file = self.output_dir / f"recon_{self.target}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                
+                output_data = {
                     'target': self.target,
-                    'baseline_updated': datetime.now().isoformat(),
-                    'historical_scans': len(historical_data),
-                    'trend_analysis': self._analyze_security_trends(historical_data)
+                    'scan_date': datetime.now().isoformat(),
+                    'results': self.results
                 }
                 
-                trend_file = self.output_dir / 'security_trends.json'
-                with open(trend_file, 'w') as f:
-                    json.dump(trend_analysis, f, indent=2)
-                    
-                self.logger.info("Security baseline updated with trend analysis")
-                return True
+                with open(results_file, 'w') as f:
+                    json.dump(output_data, f, indent=2, default=str)
                 
-        except Exception as e:
-            self.logger.error(f"Baseline tracking failed: {str(e)}")
-            
-        return False
+                self.logger.info(f"Results saved to {results_file}")
+                
+            except Exception as e:
+                self.logger.error(f"Failed to save results: {str(e)}")
         
-    # Helper methods for enhanced functionality
-    def _calculate_vulnerability_statistics(self):
-        """Calculate comprehensive vulnerability statistics"""
-        stats = {
-            'total': 0,
-            'critical': 0,
-            'high': 0,
-            'medium': 0,
-            'low': 0,
-            'by_type': {},
-            'cvss_scores': []
-        }
-        
-        # Check if we have summary data directly available
-        if 'summary' in self.results:
-            summary = self.results['summary']
-            stats['total'] = summary.get('total_vulnerabilities', 0)
-            stats['critical'] = summary.get('critical_findings', 0)
-            stats['high'] = summary.get('high_findings', 0)
-            stats['medium'] = summary.get('medium_findings', 0)
-            stats['low'] = summary.get('low_findings', 0)
-            
-            # Calculate CVSS scores based on severity counts for summary data
-            # Use proper CVSS calculator for more accurate scoring
-            for _ in range(stats['critical']):
-                dummy_vuln = {'severity': 'critical', 'type': 'Critical Security Issue'}
-                stats['cvss_scores'].append(self.cvss_calculator.calculate_cvss(dummy_vuln))
-            for _ in range(stats['high']):
-                dummy_vuln = {'severity': 'high', 'type': 'High Security Issue'}
-                stats['cvss_scores'].append(self.cvss_calculator.calculate_cvss(dummy_vuln))
-            for _ in range(stats['medium']):
-                dummy_vuln = {'severity': 'medium', 'type': 'Medium Security Issue'}
-                stats['cvss_scores'].append(self.cvss_calculator.calculate_cvss(dummy_vuln))
-            for _ in range(stats['low']):
-                dummy_vuln = {'severity': 'low', 'type': 'Low Security Issue'}
-                stats['cvss_scores'].append(self.cvss_calculator.calculate_cvss(dummy_vuln))
+        def _load_existing_results(self):
+            """Load existing scan results for reports-only mode"""
+            try:
+                # Look for existing JSON results in current directory
+                result_files = [
+                    f"recon_{self.target}*.json",
+                    f"*{self.target}*.json",
+                    "scan_results.json",
+                    "results.json"
+                ]
                 
-            return stats
-            
-        # Process web vulnerabilities (new structure)
-        if 'web_analysis' in self.results and 'applications' in self.results['web_analysis']:
-            for app in self.results['web_analysis']['applications']:
-                for vuln in app.get('vulnerabilities', []):
-                    severity = vuln.get('severity', 'low').lower()
-                    stats['total'] += 1
-                    stats[severity] = stats.get(severity, 0) + 1
-                    
-                    vuln_type = vuln.get('type', 'unknown')
-                    stats['by_type'][vuln_type] = stats['by_type'].get(vuln_type, 0) + 1
-                    
-                    # Calculate proper CVSS v3.1 score
-                    cvss_score = self.cvss_calculator.calculate_cvss(vuln)
-                    stats['cvss_scores'].append(cvss_score)
-        
-        # Process legacy web scan format
-        elif 'web_scan' in self.results and 'vulnerabilities' in self.results['web_scan']:
-            for vuln in self.results['web_scan']['vulnerabilities']:
-                severity = vuln.get('severity', 'low').lower()
-                stats['total'] += 1
-                stats[severity] = stats.get(severity, 0) + 1
-                
-                vuln_type = vuln.get('type', 'unknown')
-                stats['by_type'][vuln_type] = stats['by_type'].get(vuln_type, 0) + 1
-                
-                cvss_score = self.cvss_calculator.calculate_cvss(vuln)
-                stats['cvss_scores'].append(cvss_score)
-                
-        # Process SSL/TLS vulnerabilities (new structure)
-        if 'ssl_scan' in self.results and 'certificates' in self.results['ssl_scan']:
-            for cert_data in self.results['ssl_scan']['certificates']:
-                ssl_analysis = cert_data.get('ssl_analysis', {})
-                for vuln in ssl_analysis.get('vulnerabilities', []):
-                    stats['total'] += 1
-                    stats['medium'] = stats.get('medium', 0) + 1  # SSL issues typically medium
-                    
-                    vuln_type = f"SSL: {vuln}"
-                    stats['by_type'][vuln_type] = stats['by_type'].get(vuln_type, 0) + 1
-                
-        # Process legacy SSL/TLS vulnerabilities
-        elif 'security_analysis' in self.results:
-            ssl_analysis = self.results['security_analysis'].get('ssl_analysis', {})
-            for port_data in ssl_analysis.values():
-                for vuln in port_data.get('vulnerabilities', []):
-                    severity = vuln.get('severity', 'low').lower()
-                    stats['total'] += 1
-                    stats[severity] = stats.get(severity, 0) + 1
-                    
-                    vuln_type = vuln.get('type', 'unknown')
-                    stats['by_type'][vuln_type] = stats['by_type'].get(vuln_type, 0) + 1
-                    
-                    cvss_score = self.cvss_calculator.calculate_cvss(vuln)
-                    stats['cvss_scores'].append(cvss_score)
-                    
-        return stats
-        
-    def _calculate_network_statistics(self):
-        """Calculate network exposure statistics"""
-        stats = {
-            'total_hosts': 0,
-            'total_ports': 0,
-            'open_ports': 0,
-            'services': {},
-            'dangerous_ports': 0,
-            'encryption_status': {}
-        }
-        
-        # Check new data structure first
-        if 'network_scan' in self.results and 'hosts_discovered' in self.results['network_scan']:
-            hosts = self.results['network_scan']['hosts_discovered']
-            stats['total_hosts'] = len(hosts)
-            
-            dangerous_ports = [21, 22, 23, 25, 53, 135, 139, 445, 1433, 3306, 3389, 5432]
-            
-            for host in hosts:
-                for port_info in host.get('ports', []):
-                    if port_info.get('state') == 'open':
-                        stats['total_ports'] += 1
-                        stats['open_ports'] += 1
+                import glob
+                for pattern in result_files:
+                    matching_files = glob.glob(pattern)
+                    if matching_files:
+                        # Use the most recent file
+                        latest_file = max(matching_files, key=os.path.getctime)
+                        self.logger.info(f"Loading existing results from {latest_file}")
                         
-                        port_num = int(port_info.get('port', 0))
-                        if port_num in dangerous_ports:
-                            stats['dangerous_ports'] += 1
+                        with open(latest_file, 'r') as f:
+                            loaded_results = json.load(f)
                             
-                        service = port_info.get('service', 'unknown')
-                        stats['services'][service] = stats['services'].get(service, 0) + 1
-        
-        # Fallback to legacy structure
-        elif 'nmap' in self.results and 'hosts' in self.results['nmap']:
-            stats['total_hosts'] = len(self.results['nmap']['hosts'])
-            
-            dangerous_ports = [21, 22, 23, 25, 53, 135, 139, 445, 1433, 3306, 3389, 5432]
-            
-            for host in self.results['nmap']['hosts']:
-                for port_info in host.get('ports', []):
-                    if port_info.get('state') == 'open':
-                        stats['total_ports'] += 1
-                        stats['open_ports'] += 1
-                        
-                        port_num = int(port_info.get('port', 0))
-                        if port_num in dangerous_ports:
-                            stats['dangerous_ports'] += 1
-                            
-                        service = port_info.get('service', {}).get('name', 'unknown')
-                        stats['services'][service] = stats['services'].get(service, 0) + 1
-                        
-        return stats
-        
-    def _generate_enhanced_summary_cards(self, vuln_stats, network_stats, risk_assessment):
-        """Generate enhanced summary cards HTML"""
-        cards_html = f"""
-        <div class="col-md-3">
-            <div class="card summary-card border-danger">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-danger"><i class="fas fa-exclamation-triangle"></i> Risk Score</h5>
-                    <div class="metric-value text-danger">{risk_assessment.get('total_score', 0)}/100</div>
-                    <p class="card-text">Risk Level: <span class="badge bg-{self._get_risk_color(risk_assessment.get('risk_level', 'unknown'))}">{risk_assessment.get('risk_level', 'UNKNOWN')}</span></p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card summary-card border-warning">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-warning"><i class="fas fa-bug"></i> Vulnerabilities</h5>
-                    <div class="metric-value text-warning">{vuln_stats['total']}</div>
-                    <p class="card-text">Critical: {vuln_stats.get('critical', 0)} | High: {vuln_stats.get('high', 0)}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card summary-card border-info">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-info"><i class="fas fa-network-wired"></i> Network Exposure</h5>
-                    <div class="metric-value text-info">{network_stats['open_ports']}</div>
-                    <p class="card-text">Open Ports | {network_stats['dangerous_ports']} Dangerous</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card summary-card border-success">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-success"><i class="fas fa-chart-line"></i> CVSS Average</h5>
-                    <div class="metric-value text-success">{self._calculate_avg_cvss(vuln_stats):.1f}</div>
-                    <p class="card-text">Average CVSS Score</p>
-                </div>
-            </div>
-        </div>
-        """
-        return cards_html
-        
-    def _generate_interactive_charts_js(self, risk_assessment, vuln_stats, compliance_status):
-        """Generate JavaScript for interactive charts"""
-        return f"""
-        // Risk Component Breakdown Pie Chart
-        var riskData = [{{
-            values: [{risk_assessment.get('component_scores', {}).get('vulnerabilities', 0)}, 
-                    {risk_assessment.get('component_scores', {}).get('ssl_tls', 0)}, 
-                    {risk_assessment.get('component_scores', {}).get('network_exposure', 0)}, 
-                    {risk_assessment.get('component_scores', {}).get('security_config', 0)}],
-            labels: ['Vulnerabilities', 'SSL/TLS Security', 'Network Exposure', 'Security Configuration'],
-            type: 'pie',
-            marker: {{
-                colors: ['#dc3545', '#fd7e14', '#ffc107', '#17a2b8']
-            }},
-            hovertemplate: '%{{label}}: %{{value}} points<br>%{{percent}}<extra></extra>'
-        }}];
-        
-        var riskLayout = {{
-            title: 'Risk Score Components',
-            showlegend: true
-        }};
-        
-        Plotly.newPlot('riskBreakdownChart', riskData, riskLayout);
-        
-        // Vulnerability Severity Bar Chart
-        var vulnData = [{{
-            x: ['Critical', 'High', 'Medium', 'Low'],
-            y: [{vuln_stats.get('critical', 0)}, {vuln_stats.get('high', 0)}, {vuln_stats.get('medium', 0)}, {vuln_stats.get('low', 0)}],
-            type: 'bar',
-            marker: {{
-                color: ['#dc3545', '#fd7e14', '#ffc107', '#28a745']
-            }}
-        }}];
-        
-        var vulnLayout = {{
-            title: 'Vulnerability Severity Distribution',
-            xaxis: {{ title: 'Severity Level' }},
-            yaxis: {{ title: 'Count' }}
-        }};
-        
-        Plotly.newPlot('vulnerabilityChart', vulnData, vulnLayout);
-        
-        // Network Topology (simple D3.js visualization)
-        {self._generate_network_topology_js()}
-        
-        // Compliance Radar Chart
-        {self._generate_compliance_radar_js(compliance_status)}
-        """
-        
-    # Additional helper methods would be implemented here...
-    def _get_enhanced_dashboard_css(self):
-        """Get enhanced CSS for dashboard styling"""
-        return """
-        .dashboard-container { font-family: 'Arial', sans-serif; }
-        .risk-indicator { 
-            border: 3px solid; 
-            border-radius: 10px; 
-            padding: 15px; 
-            text-align: center; 
-        }
-        .risk-critical { border-color: #dc3545; color: #dc3545; }
-        .risk-high { border-color: #fd7e14; color: #fd7e14; }
-        .risk-medium { border-color: #ffc107; color: #ffc107; }
-        .risk-low { border-color: #20c997; color: #20c997; }
-        .risk-minimal { border-color: #28a745; color: #28a745; }
-        .risk-score { font-size: 2.5rem; font-weight: bold; }
-        .risk-label { font-size: 0.9rem; font-weight: bold; }
-        .summary-card { margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .metric-value { font-size: 2.5rem; font-weight: bold; }
-        """
-        
-    def _get_risk_color(self, risk_level):
-        """Get Bootstrap color class for risk level"""
-        color_map = {
-            'critical': 'danger',
-            'high': 'warning',
-            'medium': 'info',
-            'low': 'success',
-            'minimal': 'success'
-        }
-        return color_map.get(risk_level.lower(), 'secondary')
-        
-    def _calculate_avg_cvss(self, vuln_stats):
-        """Calculate average CVSS score"""
-        cvss_scores = vuln_stats.get('cvss_scores', [])
-        if cvss_scores:
-            return sum(cvss_scores) / len(cvss_scores)
-        return 0.0
-        
-    # Placeholder methods for complex functionality
-    def _generate_cvss_analysis(self):
-        """Generate detailed CVSS analysis"""
-        return {'placeholder': 'CVSS analysis would be implemented here'}
-        
-    def _extract_detailed_vulnerabilities(self):
-        """Extract detailed vulnerability information"""
-        return {'placeholder': 'Detailed vulnerability extraction would be implemented here'}
-        
-    def _analyze_network_exposure(self):
-        """Analyze network exposure details"""
-        return {'placeholder': 'Network exposure analysis would be implemented here'}
-        
-    def _identify_compliance_gaps(self):
-        """Identify compliance gaps"""
-        return {'placeholder': 'Compliance gap analysis would be implemented here'}
-        
-    def _generate_remediation_priorities(self):
-        """Generate remediation priorities"""
-        return {'placeholder': 'Remediation prioritization would be implemented here'}
-        
-    def _get_historical_risk_trends(self):
-        """Get historical risk trends"""
-        return {'placeholder': 'Historical trend analysis would be implemented here'}
-        
-    def _generate_compliance_summary(self, compliance_status):
-        """Generate compliance summary"""
-        return {'placeholder': 'Compliance summary would be implemented here'}
-        
-    def _perform_gap_analysis(self, compliance_status):
-        """Perform gap analysis"""
-        return {'placeholder': 'Gap analysis would be implemented here'}
-        
-    def _create_compliance_roadmap(self, compliance_status):
-        """Create compliance roadmap"""
-        return {'placeholder': 'Compliance roadmap would be implemented here'}
-        
-    def _assess_certification_readiness(self, compliance_status):
-        """Assess certification readiness"""
-        return {'placeholder': 'Certification readiness assessment would be implemented here'}
-        
-    def _analyze_security_trends(self, historical_data):
-        """Analyze security trends"""
-        return {'placeholder': 'Security trend analysis would be implemented here'}
-        
-    def _generate_findings_table(self, vuln_stats):
-        """Generate detailed findings table HTML with port information"""
-        
-        # Get network data from results
-        network_data = self._extract_network_details()
-        vulnerabilities = self._extract_vulnerability_details_for_table()
-        
-        findings_html = f"""
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header bg-danger text-white">
-                        <h5><i class="fas fa-network-wired"></i> Open Ports Analysis</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Port</th>
-                                        <th>Protocol</th>
-                                        <th>Service</th>
-                                        <th>Version</th>
-                                        <th>Risk Level</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {self._generate_port_rows(network_data)}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header bg-warning text-white">
-                        <h5><i class="fas fa-exclamation-triangle"></i> Security Vulnerabilities</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Type</th>
-                                        <th>Severity</th>
-                                        <th>Description</th>
-                                        <th>CVSS</th>
-                                        <th>Vector</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {self._generate_vulnerability_rows(vulnerabilities)}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5><i class="fas fa-shield-alt"></i> Risk Analysis & Recommendations</h5>
-                    </div>
-                    <div class="card-body">
-                        {self._generate_risk_recommendations(network_data, vulnerabilities)}
-                    </div>
-                </div>
-            </div>
-        </div>
-        """
-        
-        return findings_html
-        
-    def _extract_network_details(self):
-        """Extract detailed network information from scan results"""
-        network_details = []
-        
-        # Access network scan data directly (new structure)
-        network_data = self.results.get('network_scan', {})
-        hosts = network_data.get('hosts_discovered', [])
-        
-        if hosts:
-            for host in hosts:
-                hostname = host.get('hostname', host.get('ip', 'Unknown'))
-                for port_info in host.get('ports', []):
-                    if port_info.get('state') == 'open':
-                        # Determine risk level
-                        risk_level = self._assess_port_risk_detailed(port_info)
-                        
-                        # Determine risk color for display
-                        risk_colors = {
-                            'Critical': 'danger',
-                            'High': 'warning', 
-                            'Medium': 'info',
-                            'Low': 'success'
-                        }
-                        
-                        network_details.append({
-                            'host': hostname,
-                            'ip': host.get('ip', 'Unknown'),
-                            'port': port_info.get('port', 'Unknown'),
-                            'protocol': port_info.get('protocol', 'tcp'),
-                            'service': port_info.get('service', 'unknown'),
-                            'version': port_info.get('version', 'unknown'),
-                            'product': port_info.get('service', 'unknown'),  # Use service as product fallback
-                            'state': port_info.get('state', 'unknown'),
-                            'risk_level': risk_level,
-                            'risk_color': risk_colors.get(risk_level, 'secondary'),
-                            'banner': port_info.get('scripts', {})
-                        })
-        else:
-            # Fallback: Check for legacy nmap structure
-            results_data = self.results
-            if 'results' in self.results:
-                results_data = self.results['results']
-            
-            if 'nmap' in results_data and 'hosts' in results_data['nmap']:
-                for host in results_data['nmap']['hosts']:
-                    for port_info in host.get('ports', []):
-                        if port_info.get('state') == 'open':
-                            service = port_info.get('service', {})
-                            
-                            # Determine risk level
-                            risk_level = self._assess_port_risk_detailed(port_info)
-                            
-                            network_details.append({
-                                'host': host.get('address', 'Unknown'),
-                                'port': port_info.get('port', 'Unknown'),
-                            'protocol': port_info.get('protocol', 'Unknown'),
-                            'service': service.get('name', 'Unknown'),
-                            'product': service.get('product', ''),
-                            'version': service.get('version', ''),
-                            'risk_level': risk_level,
-                            'risk_color': self._get_risk_badge_color(risk_level)
-                        })
-                        
-        return network_details
-        
-    def _assess_port_risk_detailed(self, port_info):
-        """Assess detailed risk level for a port"""
-        port = int(port_info.get('port', 0))
-        
-        # Handle both string and dict service formats
-        service_field = port_info.get('service', '')
-        if isinstance(service_field, dict):
-            service = service_field.get('name', '').lower()
-        else:
-            service = str(service_field).lower()
-        
-        # Critical risk ports
-        critical_ports = [21, 23, 135, 139, 445, 3389, 1433, 3306, 5432]
-        # High risk ports  
-        high_ports = [22, 25, 53, 80, 443, 993, 995, 8080, 8443]
-        # Medium risk ports
-        medium_ports = [110, 143, 993, 995, 5985, 5986]
-        
-        if port in critical_ports:
-            return 'Critical'
-        elif port in high_ports:
-            return 'High'
-        elif port in medium_ports:
-            return 'Medium'
-        elif service in ['ftp', 'telnet', 'rlogin', 'rsh']:
-            return 'Critical'
-        elif service in ['ssh', 'http', 'https', 'smtp']:
-            return 'High'
-        elif port < 1024:
-            return 'Medium'
-        else:
-            return 'Low'
-            
-    def _get_risk_badge_color(self, risk_level):
-        """Get Bootstrap badge color for risk level"""
-        color_map = {
-            'Critical': 'danger',
-            'High': 'warning', 
-            'Medium': 'info',
-            'Low': 'success'
-        }
-        return color_map.get(risk_level, 'secondary')
-        
-    def _generate_port_rows(self, network_data):
-        """Generate HTML table rows for ports"""
-        if not network_data:
-            return '<tr><td colspan="5" class="text-center text-muted">No open ports detected</td></tr>'
-            
-        rows = []
-        for port_data in network_data:
-            version_info = f"{port_data['product']} {port_data['version']}".strip()
-            if not version_info:
-                version_info = 'Unknown'
+                        # Merge loaded results with current results structure
+                        if isinstance(loaded_results, dict):
+                            self.results.update(loaded_results.get('results', loaded_results))
+                            return True
                 
-            rows.append(f"""
-            <tr>
-                <td><strong>{port_data['port']}</strong></td>
-                <td>{port_data['protocol'].upper()}</td>
-                <td>{port_data['service']}</td>
-                <td>{version_info}</td>
-                <td><span class="badge bg-{port_data['risk_color']}">{port_data['risk_level']}</span></td>
-            </tr>
-            """)
-            
-        return ''.join(rows)
-        
-    def _extract_vulnerability_details_for_table(self):
-        """Extract vulnerability details for display"""
-        vulnerabilities = []
-        
-        # Handle nested results structure (from JSON reports)
-        results_data = self.results
-        if 'results' in self.results:
-            results_data = self.results['results']
-        
-        # Extract web vulnerabilities from new structure (web_analysis.applications[].vulnerabilities)
-        web_analysis = results_data.get('web_analysis', {})
-        applications = web_analysis.get('applications', [])
-        
-        for app in applications:
-            app_vulns = app.get('vulnerabilities', [])
-            for vuln in app_vulns:
-                # Calculate proper CVSS v3.1 score
-                cvss_score = self.cvss_calculator.calculate_cvss(vuln)
-                cvss_vector = self.cvss_calculator.get_cvss_vector(vuln)
+                return False
                 
-                vulnerabilities.append({
-                    'type': vuln.get('type', vuln.get('name', 'Web Vulnerability')),
-                    'severity': vuln.get('severity', 'Low'),
-                    'description': vuln.get('description', f'Vulnerability found in {app.get("url", "web application")}'),
-                    'cvss': cvss_score,
-                    'cvss_vector': cvss_vector,
-                    'source': f'Web Application ({app.get("url", "Unknown URL")})',
-                    'cwe': vuln.get('cwe', 'N/A'),
-                    'confidence': vuln.get('confidence', 'Medium')
-                })
-        
-        # Extract web vulnerabilities from legacy structure (fallback)
-        if 'web_scan' in results_data and 'vulnerabilities' in results_data['web_scan']:
-            for vuln in results_data['web_scan']['vulnerabilities']:
-                cvss_score = self.cvss_calculator.calculate_cvss(vuln)
-                cvss_vector = self.cvss_calculator.get_cvss_vector(vuln)
-                vulnerabilities.append({
-                    'type': vuln.get('type', 'Unknown'),
-                    'severity': vuln.get('severity', 'Low'),
-                    'description': vuln.get('description', 'No description available'),
-                    'cvss': cvss_score,
-                    'cvss_vector': cvss_vector,
-                    'source': 'Web Scan',
-                    'cwe': vuln.get('cwe', 'N/A'),
-                    'confidence': vuln.get('confidence', 'Medium')
-                })
-        
-        # Extract SSL/TLS vulnerabilities from new structure
-        ssl_scan = results_data.get('ssl_scan', {})
-        for domain_key, domain_data in ssl_scan.items():
-            if isinstance(domain_data, dict) and 'vulnerabilities' in domain_data:
-                ssl_vulns = domain_data.get('vulnerabilities', [])
-                for vuln in ssl_vulns:
-                    # Calculate proper CVSS v3.1 score
-                    cvss_score = self.cvss_calculator.calculate_cvss(vuln)
-                    cvss_vector = self.cvss_calculator.get_cvss_vector(vuln)
-                        
-                    vulnerabilities.append({
-                        'type': vuln.get('type', vuln.get('name', 'SSL/TLS Issue')),
-                        'severity': vuln.get('severity', 'Medium'),
-                        'description': vuln.get('description', f'SSL/TLS vulnerability on {domain_key}'),
-                        'cvss': cvss_score,
-                        'cvss_vector': cvss_vector,
-                        'source': f'SSL Analysis ({domain_key})',
-                        'cwe': vuln.get('cwe', 'CWE-295'),
-                        'confidence': vuln.get('confidence', 'High')
-                    })
-                
-        # Extract SSL/TLS vulnerabilities from legacy structure (fallback)
-        if 'security_analysis' in results_data:
-            ssl_analysis = results_data['security_analysis'].get('ssl_analysis', {})
-            for port, port_data in ssl_analysis.items():
-                for vuln in port_data.get('vulnerabilities', []):
-                    cvss_score = self.cvss_calculator.calculate_cvss(vuln) if hasattr(self, 'cvss_calculator') else 0.0
-                    vulnerabilities.append({
-                        'type': vuln.get('type', 'SSL/TLS Issue'),
-                        'severity': vuln.get('severity', 'Medium'),
-                        'description': vuln.get('description', f'SSL/TLS vulnerability on port {port}'),
-                        'cvss': cvss_score,
-                        'source': f'SSL Analysis (Port {port})'
-                    })
-                    
-        return vulnerabilities
-        
-    def _generate_vulnerability_rows(self, vulnerabilities):
-        """Generate HTML table rows for vulnerabilities"""
-        if not vulnerabilities:
-            return '<tr><td colspan="5" class="text-center text-success">No vulnerabilities detected</td></tr>'
-            
-        rows = []
-        for vuln in vulnerabilities:
-            severity_color = self._get_risk_badge_color(vuln['severity'].title())
-            cvss_display = f"{vuln['cvss']:.1f}" if vuln['cvss'] > 0 else 'N/A'
-            cvss_vector = vuln.get('cvss_vector', 'N/A')
-            
-            # Truncate vector for display
-            vector_display = cvss_vector
-            if len(vector_display) > 25:
-                vector_display = vector_display[:22] + '...'
-            
-            rows.append(f"""
-            <tr>
-                <td>
-                    <strong>{vuln['type']}</strong><br>
-                    <small class="text-muted">{vuln['source']}</small><br>
-                    <small class="text-info">CWE: {vuln.get('cwe', 'N/A')}</small>
-                </td>
-                <td><span class="badge bg-{severity_color}">{vuln['severity']}</span></td>
-                <td>{vuln['description'][:80]}{'...' if len(vuln['description']) > 80 else ''}</td>
-                <td><strong>{cvss_display}</strong></td>
-                <td><small class="text-monospace" title="{cvss_vector}">{vector_display}</small></td>
-            </tr>
-            """)
-            
-        return ''.join(rows)
-        
-    def _generate_risk_recommendations(self, network_data, vulnerabilities):
-        """Generate risk analysis and recommendations"""
-        critical_ports = [p for p in network_data if p['risk_level'] == 'Critical']
-        high_risk_ports = [p for p in network_data if p['risk_level'] == 'High']
-        critical_vulns = [v for v in vulnerabilities if v['severity'].lower() == 'critical']
-        
-        recommendations = []
-        
-        if critical_ports:
-            port_list = ', '.join([str(p['port']) for p in critical_ports])
-            recommendations.append(f"🔴 <strong>CRITICAL:</strong> Secure or restrict access to critical ports: {port_list}")
-            
-        if high_risk_ports:
-            port_list = ', '.join([str(p['port']) for p in high_risk_ports])
-            recommendations.append(f"🟡 <strong>HIGH:</strong> Review security for high-risk ports: {port_list}")
-            
-        if critical_vulns:
-            recommendations.append(f"🚨 <strong>URGENT:</strong> {len(critical_vulns)} critical vulnerabilities require immediate attention")
-            
-        # Add specific service recommendations
-        services = [p['service'] for p in network_data]
-        if 'ms-wbt-server' in services or any('3389' == str(p['port']) for p in network_data):
-            recommendations.append("🔒 <strong>RDP Security:</strong> Enable Network Level Authentication, use strong passwords, consider VPN access")
-            
-        if any(p['service'] in ['microsoft-ds', 'netbios-ssn'] for p in network_data):
-            recommendations.append("📁 <strong>SMB Security:</strong> Disable SMBv1, review file shares, enable SMB encryption")
-            
-        if not recommendations:
-            recommendations.append("✅ <strong>Good:</strong> No critical security issues identified in this scan")
-            
-        return '<ul class="list-unstyled">' + ''.join([f'<li class="mb-2">{rec}</li>' for rec in recommendations]) + '</ul>'
-        
-    def _generate_compliance_cards(self, compliance_status):
-        """Generate compliance framework cards HTML"""
-        
-        cards_html = ""
-        
-        for framework, data in compliance_status.items():
-            framework_name = framework.replace('_', ' ').upper()
-            
-            # Calculate compliance score
-            total_controls = 0
-            passed_controls = 0
-            
-            if isinstance(data, dict):
-                for control, control_data in data.items():
-                    if isinstance(control_data, dict):
-                        total_controls += 1
-                        status = control_data.get('status', 'unknown')
-                        if status in ['pass', 'partial']:
-                            passed_controls += 1
-                    elif isinstance(control_data, (int, float)):
-                        # NIST framework uses scores
-                        total_controls = 5  # NIST has 5 functions
-                        passed_controls = sum(1 for score in data.values() if isinstance(score, dict) and score.get('score', 0) > 50)
-                        break
-                        
-            compliance_percentage = (passed_controls / total_controls * 100) if total_controls > 0 else 0
-            
-            # Determine card color based on compliance
-            if compliance_percentage >= 80:
-                card_color = 'success'
-                icon = 'fas fa-check-circle'
-            elif compliance_percentage >= 60:
-                card_color = 'warning'
-                icon = 'fas fa-exclamation-triangle'
-            else:
-                card_color = 'danger'
-                icon = 'fas fa-times-circle'
-                
-            cards_html += f"""
-            <div class="col-md-6 col-lg-3 mb-4">
-                <div class="card border-{card_color}">
-                    <div class="card-header bg-{card_color} text-white">
-                        <h6 class="mb-0"><i class="{icon}"></i> {framework_name}</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="text-center mb-3">
-                            <div class="progress mb-2" style="height: 10px;">
-                                <div class="progress-bar bg-{card_color}" role="progressbar" 
-                                     style="width: {compliance_percentage}%" aria-valuenow="{compliance_percentage}" 
-                                     aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                            <h4 class="text-{card_color}">{compliance_percentage:.0f}%</h4>
-                            <small class="text-muted">{passed_controls}/{total_controls} Controls</small>
-                        </div>
-                        <div class="compliance-details">
-                            {self._get_framework_details(framework, data)}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            """
-            
-        return cards_html
-        
-    def _get_framework_details(self, framework, data):
-        """Get specific details for each compliance framework"""
-        
-        if framework == 'owasp_top10':
-            failed_controls = []
-            for control, control_data in data.items():
-                if isinstance(control_data, dict) and control_data.get('status') == 'fail':
-                    control_name = control.replace('_', ' ').replace('A0', 'A').title()
-                    failed_controls.append(control_name)
-                    
-            if failed_controls:
-                return f"<small class='text-danger'>Failed: {', '.join(failed_controls[:2])}{'...' if len(failed_controls) > 2 else ''}</small>"
-            else:
-                return "<small class='text-success'>All controls passing</small>"
-                
-        elif framework == 'nist_framework':
-            lowest_score = min([func.get('score', 100) for func in data.values() if isinstance(func, dict)])
-            lowest_func = [name for name, func in data.items() if isinstance(func, dict) and func.get('score', 100) == lowest_score][0]
-            return f"<small class='text-info'>Lowest: {lowest_func.title()} ({lowest_score}%)</small>"
-            
-        elif framework == 'pci_dss':
-            failed_reqs = [req for req, req_data in data.items() if isinstance(req_data, dict) and req_data.get('status') == 'fail']
-            if failed_reqs:
-                return f"<small class='text-danger'>Failed: Req {failed_reqs[0].split('_')[1]}{'...' if len(failed_reqs) > 1 else ''}</small>"
-            else:
-                return "<small class='text-success'>Requirements met</small>"
-                
-        elif framework == 'iso27001':
-            failed_controls = [ctrl for ctrl, ctrl_data in data.items() if isinstance(ctrl_data, dict) and ctrl_data.get('status') == 'fail']
-            if failed_controls:
-                return f"<small class='text-danger'>Failed: {failed_controls[0]}{'...' if len(failed_controls) > 1 else ''}</small>"
-            else:
-                return "<small class='text-success'>Controls implemented</small>"
-                
-        return "<small class='text-muted'>Assessment complete</small>"
-        
-    def _generate_network_topology_js(self):
-        """Generate network topology JavaScript with D3.js"""
-        
-        # Extract network data for topology
-        network_data = self._extract_network_details()
-        
-        # Create nodes and links for D3.js
-        hosts = set()
-        services = []
-        
-        for port_data in network_data:
-            hosts.add(port_data['host'])
-            services.append({
-                'host': port_data['host'],
-                'port': port_data['port'],
-                'service': port_data['service'],
-                'risk': port_data['risk_level']
-            })
-            
-        hosts_list = list(hosts)
-        
-        return f"""
-        // Network Topology Visualization with D3.js
-        
-        const networkData = {{
-            hosts: {hosts_list},
-            services: {services}
-        }};
-        
-        // Create SVG for network topology
-        const svgWidth = 400;
-        const svgHeight = 350;
-        const svg = d3.select('#networkTopology')
-            .append('svg')
-            .attr('width', svgWidth)
-            .attr('height', svgHeight);
-            
-        // Create simple network visualization
-        const centerX = svgWidth / 2;
-        const centerY = svgHeight / 2;
-        
-        // Draw main host
-        if (networkData.hosts.length > 0) {{
-            const mainHost = networkData.hosts[0];
-            
-            // Main host circle
-            svg.append('circle')
-                .attr('cx', centerX)
-                .attr('cy', centerY)
-                .attr('r', 40)
-                .attr('fill', '#2c3e50')
-                .attr('stroke', '#3498db')
-                .attr('stroke-width', 3);
-                
-            // Host label
-            svg.append('text')
-                .attr('x', centerX)
-                .attr('y', centerY + 5)
-                .attr('text-anchor', 'middle')
-                .attr('fill', 'white')
-                .attr('font-family', 'Arial')
-                .attr('font-size', '12px')
-                .attr('font-weight', 'bold')
-                .text(mainHost);
-                
-            // Draw service nodes around the host
-            const angleStep = (2 * Math.PI) / networkData.services.length;
-            const radius = 120;
-            
-            networkData.services.forEach((service, index) => {{
-                const angle = index * angleStep;
-                const x = centerX + radius * Math.cos(angle);
-                const y = centerY + radius * Math.sin(angle);
-                
-                // Service risk colors
-                const riskColors = {{
-                    'Critical': '#dc3545',
-                    'High': '#fd7e14', 
-                    'Medium': '#ffc107',
-                    'Low': '#28a745'
-                }};
-                
-                const color = riskColors[service.risk] || '#6c757d';
-                
-                // Connection line
-                svg.append('line')
-                    .attr('x1', centerX)
-                    .attr('y1', centerY)
-                    .attr('x2', x)
-                    .attr('y2', y)
-                    .attr('stroke', color)
-                    .attr('stroke-width', 2)
-                    .attr('opacity', 0.6);
-                    
-                // Service circle
-                svg.append('circle')
-                    .attr('cx', x)
-                    .attr('cy', y)
-                    .attr('r', 20)
-                    .attr('fill', color)
-                    .attr('stroke', '#fff')
-                    .attr('stroke-width', 2)
-                    .style('cursor', 'pointer')
-                    .append('title')
-                    .text(`Port ${{service.port}} - ${{service.service}} (${{service.risk}} Risk)`);
-                    
-                // Service label
-                svg.append('text')
-                    .attr('x', x)
-                    .attr('y', y + 5)
-                    .attr('text-anchor', 'middle')
-                    .attr('fill', 'white')
-                    .attr('font-family', 'Arial')
-                    .attr('font-size', '10px')
-                    .attr('font-weight', 'bold')
-                    .text(service.port);
-            }});
-            
-            // Add legend
-            const legend = svg.append('g').attr('transform', 'translate(10, 10)');
-            
-            const legendData = [
-                {{'risk': 'Critical', 'color': '#dc3545'}},
-                {{'risk': 'High', 'color': '#fd7e14'}},
-                {{'risk': 'Medium', 'color': '#ffc107'}},
-                {{'risk': 'Low', 'color': '#28a745'}}
-            ];
-            
-            legendData.forEach((item, index) => {{
-                const y = index * 25;
-                
-                legend.append('circle')
-                    .attr('cx', 10)
-                    .attr('cy', y)
-                    .attr('r', 8)
-                    .attr('fill', item.color);
-                    
-                legend.append('text')
-                    .attr('x', 25)
-                    .attr('y', y + 5)
-                    .attr('font-family', 'Arial')
-                    .attr('font-size', '12px')
-                    .text(item.risk + ' Risk');
-            }});
-        }} else {{
-            // No hosts found message
-            svg.append('text')
-                .attr('x', centerX)
-                .attr('y', centerY)
-                .attr('text-anchor', 'middle')
-                .attr('font-family', 'Arial')
-                .attr('font-size', '16px')
-                .attr('fill', '#6c757d')
-                .text('No network data available');
-        }}
-        """
-        
-    def _generate_compliance_radar_js(self, compliance_status):
-        """Generate compliance radar chart JavaScript"""
-        
-        # Calculate compliance scores based on our assessment data
-        compliance_scores = {
-            'OWASP Top 10': 70,  # Based on security findings
-            'NIST Framework': 65,  # Based on protective measures
-            'PCI DSS': 60,       # Based on data protection
-            'ISO 27001': 75,     # Based on overall security posture
-            'GDPR': 80,          # Based on data handling practices
-            'SOC 2': 68          # Based on security controls
-        }
-        
-        # Extract actual compliance data if available
-        if compliance_status:
-            owasp = compliance_status.get('owasp_top_10', {})
-            nist = compliance_status.get('nist_framework', {})
-            pci = compliance_status.get('pci_dss', {})
-            
-            # Update scores based on actual assessment
-            if isinstance(owasp, dict):
-                owasp_score = sum(1 for check in owasp.values() if check.get('status') == 'pass') / len(owasp) * 100 if owasp else 70
-                compliance_scores['OWASP Top 10'] = int(owasp_score)
-            
-            if isinstance(nist, dict):
-                nist_score = sum(check.get('score', 50) for check in nist.values()) / len(nist) if nist else 65
-                compliance_scores['NIST Framework'] = int(nist_score)
-                
-        return f"""
-        // Compliance Framework Radar Chart
-        var complianceData = [{{
-            type: 'scatterpolar',
-            r: [{compliance_scores['OWASP Top 10']}, {compliance_scores['NIST Framework']}, 
-                {compliance_scores['PCI DSS']}, {compliance_scores['ISO 27001']}, 
-                {compliance_scores['GDPR']}, {compliance_scores['SOC 2']}],
-            theta: ['OWASP Top 10', 'NIST Framework', 'PCI DSS', 'ISO 27001', 'GDPR', 'SOC 2'],
-            fill: 'toself',
-            name: 'Current Compliance',
-            line: {{
-                color: '#1f77b4'
-            }},
-            fillcolor: 'rgba(31, 119, 180, 0.2)'
-        }}, {{
-            type: 'scatterpolar',
-            r: [100, 100, 100, 100, 100, 100],
-            theta: ['OWASP Top 10', 'NIST Framework', 'PCI DSS', 'ISO 27001', 'GDPR', 'SOC 2'],
-            fill: 'toself',
-            name: 'Target Compliance',
-            line: {{
-                color: '#28a745',
-                dash: 'dash'
-            }},
-            fillcolor: 'rgba(40, 167, 69, 0.1)'
-        }}];
+            except Exception as e:
+                self.logger.error(f"Failed to load existing results: {str(e)}")
+                return False
 
-        var complianceLayout = {{
-            polar: {{
-                radialaxis: {{
-                    visible: true,
-                    range: [0, 100],
-                    ticksuffix: '%'
-                }}
-            }},
-            title: 'Compliance Framework Assessment',
-            showlegend: true,
-            width: 400,
-            height: 350
-        }};
 
-        Plotly.newPlot('complianceChart', complianceData, complianceLayout);
-        """
-        
-    def _generate_subdomain_details(self):
-        """Generate detailed subdomain enumeration results"""
-        
-        # Access subdomain data directly (new structure)
-        subdomains_data = self.results.get('subdomains', {})
-        
-        if not subdomains_data or not subdomains_data.get('subdomains'):
-            return """
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No subdomains discovered during enumeration.
-                <br><small class="text-muted">This could indicate strong subdomain protection or limited public exposure.</small>
-            </div>
-            """
-            
-        subdomains = subdomains_data.get('subdomains', [])
-        live_subdomains = [sub for sub in subdomains if sub.get('status') == 'live']
-        
-        subdomain_html = f"""
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card border-primary">
-                    <div class="card-body text-center">
-                        <h3 class="text-primary">{len(subdomains)}</h3>
-                        <p class="mb-0">Total Discovered</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-success">
-                    <div class="card-body text-center">
-                        <h3 class="text-success">{len(live_subdomains)}</h3>
-                        <p class="mb-0">Live Subdomains</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-warning">
-                    <div class="card-body text-center">
-                        <h3 class="text-warning">{len(subdomains) - len(live_subdomains)}</h3>
-                        <p class="mb-0">Inactive/Unreachable</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="mt-4">
-            <h6>Discovered Subdomains:</h6>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Subdomain</th>
-                            <th>Status</th>
-                            <th>IP Address</th>
-                            <th>Discovery Source</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {self._generate_subdomain_rows(subdomains)}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        """
-        
-        return subdomain_html
-        
-    def _generate_subdomain_rows(self, subdomains):
-        """Generate HTML rows for subdomain table"""
-        if not subdomains:
-            return '<tr><td colspan="4" class="text-center text-muted">No subdomains found</td></tr>'
-            
-        rows = []
-        for subdomain in subdomains:
-            status = subdomain.get('status', 'unknown')
-            status_badge = 'success' if status == 'live' else 'secondary'
-            
-            rows.append(f"""
-            <tr>
-                <td><code>{subdomain.get('subdomain', 'Unknown')}</code></td>
-                <td><span class="badge bg-{status_badge}">{status.title()}</span></td>
-                <td>{subdomain.get('ip', 'Unknown')}</td>
-                <td><small class="text-muted">{subdomain.get('source', 'Unknown')}</small></td>
-            </tr>
-            """)
-            
-        return ''.join(rows)
-        
-    def _generate_ssl_analysis_details(self):
-        """Generate detailed SSL/TLS analysis results"""
-        
-        # Access SSL scan data directly (new structure)
-        ssl_data = self.results.get('ssl_scan', {})
-        
-        if not ssl_data or not ssl_data.get('certificates'):
-            return """
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i> No SSL/TLS analysis data available.
-                <br><small class="text-muted">Target may not have SSL-enabled services or analysis failed.</small>
-            </div>
-            """
-            
-        # Parse SSL analysis results
-        certificates = ssl_data.get('certificates', [])
-        total_certs = len(certificates)
-        expiring_soon = sum(1 for cert in certificates if cert.get('certificate', {}).get('validity', {}).get('days_until_expiry', 0) < 30)
-        avg_score = ssl_data.get('summary', {}).get('average_security_score', 0)
-        protocols = ssl_data.get('supported_protocols', [])
-        
-        ssl_html = f"""
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card border-success">
-                    <div class="card-body text-center">
-                        <h3 class="text-success">{total_certs}</h3>
-                        <p class="mb-0">Certificates</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-warning">
-                    <div class="card-body text-center">
-                        <h3 class="text-warning">{expiring_soon}</h3>
-                        <p class="mb-0">Expiring Soon</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-info">
-                    <div class="card-body text-center">
-                        <h3 class="text-info">{avg_score:.1f}</h3>
-                        <p class="mb-0">Avg Security Score</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="mt-4">
-            <h6><i class="fas fa-certificate"></i> Certificate Details</h6>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Hostname</th>
-                            <th>Subject</th>
-                            <th>Issuer</th>
-                            <th>Expires</th>
-                            <th>Security Score</th>
-                            <th>Issues</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        """
-        
-        for cert_data in certificates:
-            cert = cert_data.get('certificate', {})
-            ssl_analysis = cert_data.get('ssl_analysis', {})
-            hostname = cert_data.get('hostname', 'Unknown')
-            subject = cert.get('subject', {}).get('common_name', 'Unknown')
-            issuer = cert.get('issuer', {}).get('common_name', 'Unknown')
-            expiry = cert.get('validity', {}).get('not_after', 'Unknown')
-            days_left = cert.get('validity', {}).get('days_until_expiry', 0)
-            security_score = ssl_analysis.get('security_score', 0)
-            vulnerabilities = ssl_analysis.get('vulnerabilities', [])
-            
-            # Color code expiry warning
-            expiry_class = 'success'
-            if days_left < 30:
-                expiry_class = 'danger'
-            elif days_left < 90:
-                expiry_class = 'warning'
-            
-            ssl_html += f"""
-                        <tr>
-                            <td><strong>{hostname}</strong></td>
-                            <td><code>{subject}</code></td>
-                            <td><small>{issuer}</small></td>
-                            <td><span class="badge bg-{expiry_class}">{days_left} days</span></td>
-                            <td><span class="badge bg-primary">{security_score}/100</span></td>
-                            <td>
-                                {len(vulnerabilities)} issues
-                                {self._format_ssl_vulnerabilities_compact(vulnerabilities)}
-                            </td>
-                        </tr>
-            """
-        
-        ssl_html += """
-                    </tbody>
-                </table>
-            </div>
-        </div>
-            </div>
-        </div>
-        """
-        
-        return ssl_html
-        
-    def _format_ssl_protocols(self, protocols):
-        """Format SSL protocol list"""
-        if not protocols:
-            return '<span class="text-muted">No protocol information available</span>'
-            
-        protocol_badges = []
-        for protocol in protocols:
-            # Color code based on security
-            if 'TLS' in protocol and ('1.2' in protocol or '1.3' in protocol):
-                color = 'success'
-            elif 'TLS' in protocol:
-                color = 'warning'
-            else:
-                color = 'danger'
-                
-            protocol_badges.append(f'<span class="badge bg-{color} me-1">{protocol}</span>')
-            
-        return ''.join(protocol_badges)
-        
-    def _format_ssl_vulnerabilities(self, vulnerabilities):
-        """Format SSL vulnerability list"""
-        if not vulnerabilities:
-            return '<span class="text-success"><i class="fas fa-check"></i> No SSL vulnerabilities detected</span>'
-            
-        vuln_list = []
-        for vuln in vulnerabilities:
-            severity = vuln.get('severity', 'medium').lower()
-            color = {'critical': 'danger', 'high': 'warning', 'medium': 'info', 'low': 'secondary'}.get(severity, 'secondary')
-            vuln_list.append(f'<div><span class="badge bg-{color}">{vuln.get("name", "Unknown")}</span> - {vuln.get("description", "No description")}</div>')
-            
-        return ''.join(vuln_list)
-        
-    def _generate_osint_details(self):
-        """Generate detailed OSINT collection results"""
-        
-        # Access OSINT data directly (new structure)
-        osint_data = self.results.get('osint', {})
-        
-        if not osint_data:
-            return """
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No OSINT data collected.
-                <br><small class="text-muted">OSINT collection may have been skipped or failed.</small>
-            </div>
-            """
-            
-        whois_data = osint_data.get('whois', {})
-        dns_data = osint_data.get('dns_records', {})
-        shodan_data = osint_data.get('shodan', {})
-        
-        osint_html = f"""
-        <div class="row">
-            <div class="col-md-4">
-                <h6><i class="fas fa-id-card"></i> WHOIS Information</h6>
-                <div class="card">
-                    <div class="card-body">
-                        {self._format_whois_data(whois_data)}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <h6><i class="fas fa-server"></i> DNS Records</h6>
-                <div class="card">
-                    <div class="card-body">
-                        {self._format_dns_data(dns_data)}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <h6><i class="fas fa-search"></i> Shodan Intelligence</h6>
-                <div class="card">
-                    <div class="card-body">
-                        {self._format_shodan_data(shodan_data)}
-                    </div>
-                </div>
-            </div>
-        </div>
-        """
-        
-        return osint_html
-        
-    def _format_whois_data(self, whois_data):
-        """Format WHOIS information"""
-        if not whois_data or whois_data.get('domain_name') is None:
-            return '<small class="text-muted">No WHOIS data available (likely IP target)</small>'
-            
-        return f"""
-        <table class="table table-sm">
-            <tr><td><strong>Domain:</strong></td><td>{whois_data.get('domain_name', 'Unknown')}</td></tr>
-            <tr><td><strong>Registrar:</strong></td><td>{whois_data.get('registrar', 'Unknown')}</td></tr>
-            <tr><td><strong>Created:</strong></td><td>{whois_data.get('creation_date', 'Unknown')}</td></tr>
-            <tr><td><strong>Expires:</strong></td><td>{whois_data.get('expiration_date', 'Unknown')}</td></tr>
-            <tr><td><strong>Country:</strong></td><td>{whois_data.get('country', 'Unknown')}</td></tr>
-        </table>
-        """
-        
-    def _format_dns_data(self, dns_data):
-        """Format DNS records information"""
-        if not dns_data:
-            return '<small class="text-muted">No DNS records found</small>'
-            
-        dns_html = []
-        for record_type, records in dns_data.items():
-            if records and isinstance(records, list):
-                dns_html.append(f'<div><strong>{record_type}:</strong> {len(records)} records</div>')
-                for record in records[:3]:  # Show first 3 records
-                    dns_html.append(f'<div><small><code>{record}</code></small></div>')
-                if len(records) > 3:
-                    dns_html.append(f'<div><small class="text-muted">... and {len(records) - 3} more</small></div>')
-                    
-        return ''.join(dns_html) if dns_html else '<small class="text-muted">No DNS records available</small>'
-        
-    def _format_shodan_data(self, shodan_data):
-        """Format Shodan intelligence data"""
-        if not shodan_data or 'error' in shodan_data:
-            return f'<small class="text-muted">Shodan data unavailable<br>{shodan_data.get("error", "")}</small>'
-            
-        return f"""
-        <table class="table table-sm">
-            <tr><td><strong>Open Ports:</strong></td><td>{len(shodan_data.get('ports', []))}</td></tr>
-            <tr><td><strong>Services:</strong></td><td>{len(shodan_data.get('services', []))}</td></tr>
-            <tr><td><strong>Vulnerabilities:</strong></td><td>{len(shodan_data.get('vulns', []))}</td></tr>
-            <tr><td><strong>Last Seen:</strong></td><td>{shodan_data.get('last_update', 'Unknown')}</td></tr>
-        </table>
-        """
-        
-    def _generate_web_analysis_details(self):
-        """Generate detailed web application analysis results"""
-        
-        # Access web analysis data directly (new structure)
-        web_data = self.results.get('web_analysis', {})
-        
-        if not web_data or not web_data.get('applications'):
-            return """
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No web application analysis performed.
-                <br><small class="text-muted">Target may not have web services or web scanning was skipped.</small>
-            </div>
-            """
-            
-        applications = web_data.get('applications', [])
-        summary = web_data.get('summary', {})
-        total_vulns = summary.get('critical_vulnerabilities', 0) + summary.get('high_vulnerabilities', 0) + summary.get('medium_vulnerabilities', 0) + summary.get('low_vulnerabilities', 0)
-        
-        web_html = f"""
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card border-primary">
-                    <div class="card-body text-center">
-                        <h3 class="text-primary">{len(applications)}</h3>
-                        <p class="mb-0">Applications</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-danger">
-                    <div class="card-body text-center">
-                        <h3 class="text-danger">{total_vulns}</h3>
-                        <p class="mb-0">Total Issues</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-warning">
-                    <div class="card-body text-center">
-                        <h3 class="text-warning">{summary.get('high_vulnerabilities', 0)}</h3>
-                        <p class="mb-0">High Risk</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-info">
-                    <div class="card-body text-center">
-                        <h3 class="text-info">{summary.get('average_security_score', 0):.1f}</h3>
-                        <p class="mb-0">Avg Score</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="mt-4">
-            <h6><i class="fas fa-globe"></i> Application Details</h6>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>URL</th>
-                            <th>Status</th>
-                            <th>Technology</th>
-                            <th>Security Headers</th>
-                            <th>Vulnerabilities</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        """
-        
-        for app in applications:
-            url = app.get('url', 'Unknown')
-            status = app.get('status_code', 'Unknown')
-            tech = list(app.get('technologies', {}).values())[0] if app.get('technologies') else 'Unknown'
-            headers = app.get('security_headers', {})
-            vulns = app.get('vulnerabilities', [])
-            
-            # Count headers with good scores
-            good_headers = sum(1 for h in headers.values() if isinstance(h, dict) and h.get('score', 0) >= 8)
-            total_headers = len(headers)
-            
-            status_class = 'success' if status == 200 else 'warning' if status == 401 else 'danger'
-            
-            web_html += f"""
-                        <tr>
-                            <td><a href="{url}" target="_blank">{url}</a></td>
-                            <td><span class="badge bg-{status_class}">{status}</span></td>
-                            <td><code>{tech}</code></td>
-                            <td><span class="badge bg-info">{good_headers}/{total_headers}</span></td>
-                            <td><span class="badge bg-danger">{len(vulns)} issues</span></td>
-                        </tr>
-            """
-        
-        web_html += """
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        """
-        
-        return web_html
+# ============================== VULNERABILITY SCANNER ==============================
+class VulnerabilityScanner:
+    """CVE and vulnerability assessment scanner"""
     
-    def _format_ssl_vulnerabilities_compact(self, vulnerabilities):
-        """Format SSL vulnerabilities in compact format"""
-        if not vulnerabilities:
-            return '<small class="text-success">No issues</small>'
-        
-        vuln_badges = []
-        for vuln in vulnerabilities[:3]:  # Show max 3
-            vuln_badges.append(f'<span class="badge bg-warning ms-1">{vuln}</span>')
-        
-        if len(vulnerabilities) > 3:
-            vuln_badges.append('<span class="badge bg-secondary ms-1">...</span>')
-        
-        return '<br>' + ''.join(vuln_badges)
-        
-    def _format_web_vulnerabilities(self, vulnerabilities):
-        """Format web vulnerabilities"""
-        if not vulnerabilities:
-            return '<div class="text-success"><i class="fas fa-check"></i> No web vulnerabilities detected</div>'
-            
-        vuln_html = []
-        for vuln in vulnerabilities:
-            severity = vuln.get('severity', 'medium').lower()
-            color = {'critical': 'danger', 'high': 'warning', 'medium': 'info', 'low': 'secondary'}.get(severity, 'secondary')
-            vuln_html.append(f"""
-            <div class="mb-2">
-                <span class="badge bg-{color}">{vuln.get('type', 'Unknown')}</span>
-                <br><small>{vuln.get('description', 'No description')[:50]}...</small>
-            </div>
-            """)
-            
-        return ''.join(vuln_html)
-        
-    def _format_web_technologies(self, technologies):
-        """Format detected web technologies"""
-        if not technologies:
-            return '<small class="text-muted">No technologies detected</small>'
-            
-        tech_html = []
-        for tech in technologies:
-            tech_html.append(f'<span class="badge bg-info me-1 mb-1">{tech}</span>')
-            
-        return ''.join(tech_html)
-        
-    def _format_security_headers(self, headers):
-        """Format security headers analysis"""
-        if not headers:
-            return '<small class="text-muted">No header analysis available</small>'
-            
-        security_headers = [
-            'Content-Security-Policy', 'X-Frame-Options', 'X-XSS-Protection',
-            'X-Content-Type-Options', 'Strict-Transport-Security'
-        ]
-        
-        header_html = []
-        for header in security_headers:
-            if header in headers:
-                header_html.append(f'<div><i class="fas fa-check text-success"></i> {header}</div>')
-            else:
-                header_html.append(f'<div><i class="fas fa-times text-danger"></i> {header} <small class="text-muted">(missing)</small></div>')
-                
-        return ''.join(header_html)
-
-
-# ============================== REPORT GENERATOR ==============================
-class ReportGenerator:
-    """Generate comprehensive reconnaissance reports"""
-    
-    def __init__(self, output_dir, results, target, config=None):
+    def __init__(self, output_dir, config):
         self.output_dir = Path(output_dir)
-        self.results = results
-        self.target = target
         self.config = config
         self.logger = logging.getLogger(__name__)
         
-    def generate_markdown_report(self):
-        """Generate markdown report"""
-        try:
-            self.logger.info("Generating Markdown report...")
-            
-            # Check if we're in offline mode
-            offline_mode = False
-            run_mode_banner = ""
-            if self.config:
-                offline_mode = self.config.get('mode', 'offline', False) or self.config.get('general', 'offline_mode', False)
-                if offline_mode:
-                    run_mode_banner = "🔒 **Run Mode: Offline** (Internet-based sources intentionally skipped)\n\n"
-            
-            content = f"""# Reconnaissance Report
-
-## Target: {self.target}
-**Scan Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-{run_mode_banner}---
-
-## Executive Summary
-
-This report contains the results of a comprehensive reconnaissance scan performed on the target `{self.target}`.
-
-### Summary Statistics
-- **Subdomains Found**: {len(self.results.get('subdomains', []))}
-- **Live Subdomains**: {len([s for s in self.results.get('subdomains', []) if isinstance(s, dict)])}
-- **Open Ports**: {self._count_open_ports()}
-- **Web Technologies**: {len(self._get_web_technologies())}
-- **SSL Issues**: {len(self.results.get('ssl_scan', {}).get('vulnerabilities', []))}
-
----
-
-## Detailed Findings
-
-### 🔍 Port Scan Results
-{self._generate_nmap_section()}
-
-### 🌐 Subdomain Enumeration
-{self._generate_subdomain_section()}
-
-### 🕷️ Web Application Scan
-{self._generate_web_section()}
-
-### 🔒 SSL/TLS Analysis
-{self._generate_ssl_section()}
-
-### � Security Analysis
-{self._generate_security_section()}
-
-### �🕵️ OSINT Findings
-{self._generate_osint_section()}
-
----
-
-*Report generated by Recon Wrapper - All-in-One Version*
-"""
-            
-            report_file = self.output_dir / 'reports' / f'{self.target}_report.md'
-            report_file.parent.mkdir(exist_ok=True)
-            with open(report_file, 'w') as f:
-                f.write(content)
-            
-            self.logger.info(f"Markdown report saved to {report_file}")
-            
-        except Exception as e:
-            self.logger.error(f"Error generating Markdown report: {str(e)}")
-    
-    def generate_json_report(self):
-        """Generate JSON report"""
-        try:
-            self.logger.info("Generating JSON report...")
-            
-            # Determine the mode used for this scan
-            offline_mode = False
-            mode_string = 'online'
-            if self.config:
-                offline_mode = self.config.get('mode', 'offline', False) or self.config.get('general', 'offline_mode', False)
-                if offline_mode:
-                    mode_string = 'offline'
-            
-            json_report = {
-                'target': self.target,
-                'scan_date': datetime.now().isoformat(),
-                'mode': mode_string,
-                'results': self.results,
-                'summary': {
-                    'subdomains_found': len(self.results.get('subdomains', [])),
-                    'open_ports': self._count_open_ports(),
-                    'web_technologies': self._get_web_technologies(),
-                    'ssl_issues': len(self.results.get('ssl_scan', {}).get('vulnerabilities', []))
-                },
-                'configuration': {
-                    'offline_mode': offline_mode,
-                    'dns_server': self.config.get('general', 'dns_server', '') if self.config else '',
-                    'rate_limit': self.config.get('bruteforce', 'rate_limit', 0) if self.config else 0,
-                    'threads': self.config.get('bruteforce', 'threads', 10) if self.config else 10
-                }
-            }
-            
-            report_file = self.output_dir / 'reports' / f'{self.target}_report.json'
-            report_file.parent.mkdir(exist_ok=True)
-            with open(report_file, 'w') as f:
-                json.dump(json_report, f, indent=2, default=str)
-            
-            self.logger.info(f"JSON report saved to {report_file}")
-            
-        except Exception as e:
-            self.logger.error(f"Error generating JSON report: {str(e)}")
-    
-    def _count_open_ports(self):
-        """Count open ports from nmap results"""
-        try:
-            nmap_results = self.results.get('nmap', {})
-            return nmap_results.get('summary', {}).get('open_ports', 0)
-        except:
-            return 0
-    
-    def _get_web_technologies(self):
-        """Get detected web technologies"""
-        try:
-            web_results = self.results.get('web_scan', {})
-            tech_stack = web_results.get('technology_stack', {})
-            technologies = []
-            
-            for url, tech in tech_stack.items():
-                if tech.get('server'):
-                    technologies.append(tech['server'])
-                technologies.extend(tech.get('cms', []))
-                technologies.extend(tech.get('framework', []))
-            
-            return list(set(technologies))
-        except:
-            return []
-    
-    def _generate_nmap_section(self):
-        """Generate nmap results section"""
-        try:
-            nmap_results = self.results.get('nmap', {})
-            if not nmap_results:
-                return "No port scan results available."
-            
-            summary = nmap_results.get('summary', {})
-            content = f"""
-**Summary:**
-- Total Hosts: {summary.get('total_hosts', 0)}
-- Hosts Up: {summary.get('hosts_up', 0)}
-- Open Ports: {summary.get('open_ports', 0)}
-- Filtered Ports: {summary.get('filtered_ports', 0)}
-
-**Open Ports:**
-"""
-            
-            hosts = nmap_results.get('hosts', [])
-            for host in hosts[:3]:  # Limit hosts
-                if host.get('status') == 'up':
-                    content += f"\n**Host: {host.get('address')}**\n"
-                    for port in host.get('ports', [])[:10]:  # Limit ports
-                        if port.get('state') == 'open':
-                            service = port.get('service', {})
-                            content += f"- Port {port.get('port')}/{port.get('protocol')}: {service.get('name', 'unknown')}\n"
-            
-            return content
-        except:
-            return "Error generating port scan section."
-    
-    def _generate_subdomain_section(self):
-        """Generate subdomain results section"""
-        try:
-            subdomains = self.results.get('subdomains', [])
-            if not subdomains:
-                return "No subdomains found."
-            
-            content = f"**Total subdomains found: {len(subdomains)}**\n\n"
-            
-            # List first 20 subdomains
-            for subdomain in subdomains[:20]:
-                if isinstance(subdomain, str):
-                    content += f"- {subdomain}\n"
-                elif isinstance(subdomain, dict):
-                    content += f"- {subdomain.get('subdomain', subdomain.get('url', 'unknown'))}\n"
-            
-            if len(subdomains) > 20:
-                content += f"\n... and {len(subdomains) - 20} more subdomains\n"
-            
-            return content
-        except:
-            return "Error generating subdomain section."
-    
-    def _generate_web_section(self):
-        """Generate web scan results section"""
-        try:
-            web_results = self.results.get('web_scan', {})
-            if not web_results:
-                return "No web scan results available."
-            
-            content = ""
-            
-            # Technology stack
-            tech_stack = web_results.get('technology_stack', {})
-            if tech_stack:
-                content += "**Detected Technologies:**\n"
-                for url, tech in tech_stack.items():
-                    content += f"\nURL: {url}\n"
-                    if tech.get('server'):
-                        content += f"- Server: {tech['server']}\n"
-                    if tech.get('cms'):
-                        content += f"- CMS: {', '.join(tech['cms'])}\n"
-            
-            # Security headers
-            headers = web_results.get('security_headers', {})
-            for url, header_info in headers.items():
-                missing = header_info.get('missing_headers', [])
-                if missing:
-                    content += f"\n**Missing Security Headers for {url}:**\n"
-                    for header in missing:
-                        content += f"- {header}\n"
-            
-            # Directory brute force results
-            directories = web_results.get('directories', [])
-            if directories:
-                content += f"\n**Directory Brute Force Results ({len(directories)} found):**\n"
-                for dir_info in directories[:20]:  # Limit to first 20 entries
-                    status = dir_info.get('status_code', 'unknown')
-                    path = dir_info.get('path', 'unknown')
-                    content += f"- [{status}] {path}\n"
-                
-                if len(directories) > 20:
-                    content += f"... and {len(directories) - 20} more directories\n"
-            
-            return content if content else "No significant web findings."
-        except:
-            return "Error generating web scan section."
-    
-    def _generate_ssl_section(self):
-        """Generate SSL results section"""
-        try:
-            ssl_results = self.results.get('ssl_scan', {})
-            if not ssl_results:
-                return "No SSL scan results available."
-            
-            cert_info = ssl_results.get('certificate_info', {})
-            vulns = ssl_results.get('vulnerabilities', [])
-            
-            content = ""
-            
-            if cert_info and not cert_info.get('error'):
-                content += "**Certificate Information:**\n"
-                content += f"- Subject: {cert_info.get('subject', {}).get('CN', 'Unknown')}\n"
-                content += f"- Issuer: {cert_info.get('issuer', {}).get('O', 'Unknown')}\n"
-                content += f"- Valid Until: {cert_info.get('not_after', 'Unknown')}\n"
-                
-                if cert_info.get('is_expired'):
-                    content += "- ⚠️ **Certificate is EXPIRED**\n"
-            
-            if vulns:
-                content += "\n**SSL Vulnerabilities:**\n"
-                for vuln in vulns:
-                    content += f"- {vuln.get('severity', 'unknown').upper()}: {vuln.get('description', 'Unknown issue')}\n"
-            
-            return content if content else "No SSL issues found."
-        except:
-            return "Error generating SSL section."
-    
-    def _generate_security_section(self):
-        """Generate comprehensive security analysis section"""
-        try:
-            security_results = self.results.get('security_analysis', {})
-            subdomain_security = self.results.get('subdomain_security', {})
-            
-            if not security_results and not subdomain_security:
-                return "No security analysis results available."
-            
-            content = ""
-            
-            # Main target security analysis
-            if security_results:
-                target = security_results.get('target', self.target)
-                content += f"**Security Analysis for {target}:**\n\n"
-                
-                # Open SSL/TLS ports
-                open_ports = security_results.get('open_ports', [])
-                if open_ports:
-                    content += f"**Open SSL/TLS Ports:** {', '.join(map(str, open_ports))}\n\n"
-                
-                # SSL Analysis for each port
-                ssl_analysis = security_results.get('ssl_analysis', {})
-                for port_key, ssl_data in ssl_analysis.items():
-                    port = port_key.replace('port_', '')
-                    content += f"**Port {port} SSL/TLS Analysis:**\n"
-                    
-                    # Certificate information
-                    cert_info = ssl_data.get('certificate')
-                    if cert_info and not cert_info.get('error'):
-                        content += f"- **Subject:** {cert_info.get('subject', {}).get('commonName', 'Unknown')}\n"
-                        content += f"- **Issuer:** {cert_info.get('issuer', {}).get('organizationName', 'Unknown')}\n"
-                        content += f"- **Valid Until:** {cert_info.get('not_after', 'Unknown')}\n"
-                        content += f"- **SHA256 Fingerprint:** {cert_info.get('sha256_fingerprint', 'Unknown')[:16]}...\n"
-                        
-                        # Subject Alternative Names
-                        san = cert_info.get('san', [])
-                        if san:
-                            content += f"- **Alt Names:** {', '.join(san[:5])}\n"  # Show first 5
-                    
-                    # Supported protocols
-                    protocols = ssl_data.get('protocols', [])
-                    if protocols:
-                        supported_protocols = [p['name'] for p in protocols if p.get('supported')]
-                        content += f"- **Supported Protocols:** {', '.join(supported_protocols)}\n"
-                    
-                    # Vulnerabilities
-                    vulnerabilities = ssl_data.get('vulnerabilities', [])
-                    if vulnerabilities:
-                        content += f"- **⚠️ Vulnerabilities Found:**\n"
-                        for vuln in vulnerabilities:
-                            severity = vuln.get('severity', 'unknown').upper()
-                            name = vuln.get('name', 'Unknown')
-                            content += f"  - {severity}: {name}\n"
-                    
-                    # Security headers
-                    security_headers = ssl_data.get('security_headers', {})
-                    if security_headers:
-                        missing_headers = [header for header, info in security_headers.items() 
-                                         if not info.get('present')]
-                        if missing_headers:
-                            content += f"- **Missing Security Headers:** {', '.join(missing_headers)}\n"
-                    
-                    # Certificate Transparency logs
-                    ct_logs = ssl_data.get('transparency_logs', [])
-                    if ct_logs:
-                        content += f"- **Certificate Transparency Logs:** {len(ct_logs)} entries found\n"
-                    
-                    content += "\n"
-            
-            # Subdomain security analysis
-            if subdomain_security:
-                content += "**Subdomain Security Analysis:**\n\n"
-                for subdomain, sub_results in subdomain_security.items():
-                    content += f"**{subdomain}:**\n"
-                    
-                    open_ports = sub_results.get('open_ports', [])
-                    if open_ports:
-                        content += f"- SSL/TLS Ports: {', '.join(map(str, open_ports))}\n"
-                    
-                    ssl_analysis = sub_results.get('ssl_analysis', {})
-                    total_vulnerabilities = 0
-                    for port_data in ssl_analysis.values():
-                        vulnerabilities = port_data.get('vulnerabilities', [])
-                        total_vulnerabilities += len(vulnerabilities)
-                    
-                    if total_vulnerabilities > 0:
-                        content += f"- ⚠️ Security Issues: {total_vulnerabilities} found\n"
-                    else:
-                        content += f"- ✅ No obvious security issues detected\n"
-                    
-                    content += "\n"
-            
-            return content if content else "No security issues found."
-        except Exception as e:
-            self.logger.error(f"Error generating security section: {str(e)}")
-            return "Error generating security section."
-    
-    def _generate_osint_section(self):
-        """Generate OSINT results section"""
-        try:
-            osint_results = self.results.get('osint', {})
-            if not osint_results:
-                return "No OSINT results available."
-            
-            content = ""
-            
-            # WHOIS information
-            whois_info = osint_results.get('whois', {})
-            if whois_info and not whois_info.get('error'):
-                content += "**WHOIS Information:**\n"
-                if whois_info.get('registrar'):
-                    content += f"- Registrar: {whois_info['registrar']}\n"
-                if whois_info.get('creation_date'):
-                    content += f"- Created: {whois_info['creation_date']}\n"
-                if whois_info.get('country'):
-                    content += f"- Country: {whois_info['country']}\n"
-            
-            # DNS records
-            dns_records = osint_results.get('dns_records', {})
-            if dns_records:
-                content += "\n**DNS Records:**\n"
-                for record_type, records in dns_records.items():
-                    if records and record_type in ['A', 'MX', 'NS']:
-                        content += f"- {record_type}: {', '.join(records[:3])}\n"  # Limit records
-            
-            # Shodan data
-            shodan_data = osint_results.get('shodan', {})
-            if shodan_data and not shodan_data.get('error'):
-                content += "\n**Shodan Information:**\n"
-                if shodan_data.get('country'):
-                    content += f"- Location: {shodan_data['country']}\n"
-                if shodan_data.get('ports'):
-                    content += f"- Open Ports: {', '.join(map(str, shodan_data['ports'][:10]))}\n"
-            
-            return content if content else "No significant OSINT findings."
-        except:
-            return "Error generating OSINT section."
-
-
-# ============================== MAIN RECON WRAPPER ==============================
-class ReconWrapper:
-    """Main reconnaissance wrapper class"""
-    
-    def __init__(self):
-        self.start_time = datetime.now()
-        self.target = None
-        self.targets = []
-        self.output_dir = None
-        self.config = ConfigManager()
-        self.resource_monitor = ResourceMonitor(self.config)
-        self.progress_tracker = ProgressTracker(self.config)
-        self.error_handler = ErrorHandler(self.config)
-        self.results = {
-            'nmap': {},
-            'subdomains': [],
-            'web_scan': {},
-            'ssl_scan': {},
-            'security_analysis': {},
-            'subdomain_security': {},
-            'osint': {},
-            'screenshots': [],
-            'vulnerabilities': []
+    def scan_vulnerabilities(self, target):
+        """Run comprehensive vulnerability assessment"""
+        self.logger.info(f"Starting vulnerability scan for {target}")
+        
+        results = {
+            'target': target,
+            'cve_scan': {},
+            'nuclei_scan': {},
+            'vulnerability_count': 0
         }
         
-    def setup_logging(self):
-        """Setup logging configuration"""
-        log_dir = self.output_dir / 'logs'
-        log_dir.mkdir(exist_ok=True)
-        log_file = log_dir / 'recon.log'
+        # CVE scanning with vulners and vulscan scripts
+        self._run_nmap_vulners(target, results)
+        self._run_nuclei_scan(target, results)
         
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(log_file),
-                logging.StreamHandler(sys.stdout)
+        return results
+    
+    def _run_nmap_vulners(self, target, results):
+        """Run Nmap with vulners script"""
+        try:
+            output_file = self.output_dir / 'vulnerabilities' / f'{target}_vulners.xml'
+            output_file.parent.mkdir(exist_ok=True)
+            
+            cmd = [
+                'nmap', '-sV', '--script=vulners',
+                '-oX', str(output_file),
+                target
             ]
-        )
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+            if result.returncode == 0:
+                results['cve_scan']['vulners'] = str(output_file)
+                
+        except Exception as e:
+            self.logger.warning(f"Vulners scan error: {str(e)}")
+    
+    def _run_nuclei_scan(self, target, results):
+        """Run Nuclei vulnerability scanner"""
+        try:
+            output_file = self.output_dir / 'vulnerabilities' / f'{target}_nuclei.json'
+            
+            cmd = [
+                'nuclei', '-target', f"http://{target}",
+                '-json', '-output', str(output_file)
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+            if result.returncode == 0:
+                results['nuclei_scan']['output'] = str(output_file)
+                
+        except Exception as e:
+            self.logger.warning(f"Nuclei scan error: {str(e)}")
+
+
+# ============================== DIRECTORY SCANNER ==============================
+class DirectoryScanner:
+    """Advanced directory and file discovery scanner"""
+    
+    def __init__(self, output_dir, config):
+        self.output_dir = Path(output_dir)
+        self.config = config
         self.logger = logging.getLogger(__name__)
         
-    def create_output_directory(self, target):
-        """Create output directory structure"""
-        sanitized_target = re.sub(r'[^\w\-_\.]', '_', target)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    def scan_directories(self, target):
+        """Run comprehensive directory discovery"""
+        self.logger.info(f"Starting directory scan for {target}")
         
-        self.output_dir = Path(f"results/{sanitized_target}_{timestamp}")
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        results = {
+            'target': target,
+            'gobuster': {},
+            'ffuf': {},
+            'feroxbuster': {},
+            'directories_found': []
+        }
         
-        # Create subdirectories
-        subdirs = ['nmap', 'subdomains', 'web', 'ssl', 'osint', 'screenshots', 'reports', 'logs']
-        for subdir in subdirs:
-            (self.output_dir / subdir).mkdir(exist_ok=True)
-            
-        print(f"📁 Created output directory: {self.output_dir}")
+        # Multiple directory discovery tools
+        self._run_gobuster(target, results)
+        self._run_ffuf(target, results)
+        self._run_feroxbuster(target, results)
         
-    def validate_target(self, target):
-        """Validate if target is a valid IP or domain"""
-        import ipaddress
-        import socket
-        
-        # Check if it's a valid IP
+        return results
+    
+    def _run_gobuster(self, target, results):
+        """Run Gobuster directory discovery"""
         try:
-            ipaddress.ip_address(target)
-            return True
-        except ValueError:
-            pass
-        
-        # Check if we're in offline mode
-        offline_mode = self.config.get('mode', 'offline', False) or self.config.get('general', 'offline_mode', False)
-        
-        if offline_mode:
-            # In offline mode, use regex to validate domain format
-            # Domain regex: allows letters, numbers, hyphens, and dots
-            domain_pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
+            output_file = self.output_dir / 'directories' / f'{target}_gobuster.txt'
+            output_file.parent.mkdir(exist_ok=True)
             
-            if re.match(domain_pattern, target):
-                print(f"⚠️  Offline mode: Accepting '{target}' as valid domain (DNS resolution skipped)")
-                return True
-            else:
-                print(f"❌ Invalid target format: '{target}' (not a valid IP or domain)")
-                return False
-        else:
-            # Online mode: try to resolve the domain
-            try:
-                socket.gethostbyname(target)
-                return True
-            except socket.gaierror:
-                print(f"❌ Cannot resolve domain: '{target}' (try --offline mode for internal domains)")
-                return False
-            
-    def run_nmap_scan(self, scan_type='basic'):
-        """Run Nmap port scanning"""
-        module_name = "Port Scanning"
-        description = f"Running {scan_type} Nmap scan to discover open ports and services"
-        
-        self.progress_tracker.start_module(module_name, description, estimated_tasks=3)
-        
-        try:
-            self.progress_tracker.update_operation("Initializing Nmap scanner")
-            scanner = PortScanner(self.output_dir, self.config)
-            self.progress_tracker.update_progress(increment=1, message="Scanner initialized")
-            
-            self.progress_tracker.update_operation("Executing port scan", f"Scanning {self.target}")
-            if scan_type == 'aggressive':
-                self.results['nmap'] = scanner.aggressive_scan(self.target)
-            else:
-                self.results['nmap'] = scanner.basic_scan(self.target)
-            self.progress_tracker.update_progress(increment=1, message="Scan completed")
-            
-            # Log discoveries
-            nmap_results = self.results.get('nmap', {})
-            open_ports = nmap_results.get('open_ports', [])
-            if open_ports:
-                for port_info in open_ports[:5]:  # Show first 5 ports
-                    port = port_info.get('port', 'Unknown')
-                    service = port_info.get('service', 'Unknown')
-                    self.progress_tracker.log_discovery("Open Port", f"{port}/{service}")
-            
-            self.progress_tracker.update_operation("Processing scan results")
-            self.progress_tracker.update_progress(increment=1, message="Results processed")
-            
-            summary = f"Found {len(open_ports)} open ports" if open_ports else "No open ports detected"
-            self.progress_tracker.complete_module(module_name, summary)
-            
-        except Exception as e:
-            self.error_handler.handle_module_failure(module_name, e, is_critical=True)
-            self.progress_tracker.complete_module(module_name, "Failed - continuing with available data")
-        
-    def run_subdomain_enumeration(self):
-        """Run subdomain enumeration"""
-        module_name = "Subdomain Enumeration"
-        description = "Discovering subdomains using multiple tools and techniques"
-        
-        self.progress_tracker.start_module(module_name, description, estimated_tasks=4)
-        
-        try:
-            self.progress_tracker.update_operation("Initializing subdomain enumeration tools")
-            enum = SubdomainEnumerator(self.output_dir, self.config)
-            self.progress_tracker.update_progress(increment=1, message="Tools initialized")
-            
-            self.progress_tracker.update_operation("Running subdomain discovery", f"Scanning {self.target}")
-            self.results['subdomains'] = enum.enumerate(self.target)
-            self.progress_tracker.update_progress(increment=2, message="Discovery completed")
-            
-            # Log subdomain discoveries
-            subdomains = self.results.get('subdomains', [])
-            if subdomains:
-                for subdomain in subdomains[:5]:  # Show first 5 subdomains
-                    self.progress_tracker.log_discovery("Subdomain", subdomain)
-            
-            self.progress_tracker.update_operation("Validating discovered subdomains")
-            self.progress_tracker.update_progress(increment=1, message="Validation completed")
-            
-            summary = f"Discovered {len(subdomains)} subdomains" if subdomains else "No subdomains found"
-            self.progress_tracker.complete_module(module_name, summary)
-            
-        except Exception as e:
-            self.error_handler.handle_module_failure(module_name, e, is_critical=False)
-            self.progress_tracker.complete_module(module_name, "Failed - continuing scan")
-        
-    def run_web_scanning(self):
-        """Run web application scanning"""
-        module_name = "Web Application Scanning"
-        description = "Analyzing web technologies, directories, and vulnerabilities"
-        
-        self.progress_tracker.start_module(module_name, description, estimated_tasks=5)
-        
-        try:
-            self.progress_tracker.update_operation("Initializing web scanner")
-            web_scanner = WebScanner(self.output_dir, self.config)
-            self.progress_tracker.update_progress(increment=1, message="Scanner initialized")
-            
-            self.progress_tracker.update_operation("Scanning web applications", f"Analyzing {self.target}")
-            self.results['web_scan'] = web_scanner.scan_target(self.target)
-            self.progress_tracker.update_progress(increment=3, message="Web scan completed")
-            
-            # Log web discoveries
-            web_results = self.results.get('web_scan', {})
-            
-            # Log technologies
-            technologies = web_results.get('technologies', [])
-            if technologies:
-                for tech in technologies[:3]:  # Show first 3 technologies
-                    self.progress_tracker.log_discovery("Technology", tech)
-            
-            # Log directories found
-            directories = web_results.get('directories', [])
-            if directories:
-                for directory in directories[:3]:  # Show first 3 directories
-                    self.progress_tracker.log_discovery("Directory", directory)
-            
-            # Log vulnerabilities
-            vulnerabilities = web_results.get('vulnerabilities', [])
-            if vulnerabilities:
-                for vuln in vulnerabilities[:2]:  # Show first 2 vulnerabilities
-                    self.progress_tracker.log_discovery("Vulnerability", vuln.get('name', 'Unknown'))
-            
-            self.progress_tracker.update_operation("Processing web scan results")
-            self.progress_tracker.update_progress(increment=1, message="Results processed")
-            
-            findings_count = len(technologies) + len(directories) + len(vulnerabilities)
-            summary = f"Found {findings_count} web-related findings" if findings_count > 0 else "No significant web findings"
-            self.progress_tracker.complete_module(module_name, summary)
-            
-        except Exception as e:
-            self.error_handler.handle_module_failure(module_name, e, is_critical=False)
-            self.progress_tracker.complete_module(module_name, "Failed - continuing scan")
-        
-    def run_ssl_analysis(self):
-        """Run SSL/TLS analysis"""
-        module_name = "SSL/TLS Analysis"
-        description = "Analyzing SSL/TLS configuration and security vulnerabilities"
-        
-        self.progress_tracker.start_module(module_name, description, estimated_tasks=3)
-        
-        try:
-            self.progress_tracker.update_operation("Initializing SSL scanner")
-            ssl_scanner = SSLScanner(self.output_dir, self.config)
-            self.progress_tracker.update_progress(increment=1, message="Scanner initialized")
-            
-            self.progress_tracker.update_operation("Analyzing SSL/TLS configuration", f"Scanning {self.target}")
-            self.results['ssl_scan'] = ssl_scanner.scan(self.target)
-            self.progress_tracker.update_progress(increment=1, message="SSL analysis completed")
-            
-            # Log SSL discoveries
-            ssl_results = self.results.get('ssl_scan', {})
-            
-            # Log SSL vulnerabilities
-            vulnerabilities = ssl_results.get('vulnerabilities', [])
-            if vulnerabilities:
-                for vuln in vulnerabilities:
-                    self.progress_tracker.log_discovery("SSL Vulnerability", vuln)
-            
-            # Log certificate information
-            certificate = ssl_results.get('certificate', {})
-            if certificate:
-                issuer = certificate.get('issuer', 'Unknown')
-                self.progress_tracker.log_discovery("SSL Certificate", f"Issued by {issuer}")
-            
-            self.progress_tracker.update_operation("Processing SSL results")
-            self.progress_tracker.update_progress(increment=1, message="Results processed")
-            
-            vuln_count = len(vulnerabilities)
-            if vuln_count > 0:
-                summary = f"Found {vuln_count} SSL/TLS vulnerabilities"
-            else:
-                summary = "SSL/TLS configuration appears secure"
-            
-            self.progress_tracker.complete_module(module_name, summary)
-            
-        except Exception as e:
-            self.error_handler.handle_module_failure(module_name, e, is_critical=False)
-            self.progress_tracker.complete_module(module_name, "Failed - continuing scan")
-        
-    def run_security_analysis(self):
-        """Run comprehensive security analysis"""
-        module_name = "Security Analysis"
-        description = "Analyzing security configuration and vulnerabilities"
-        
-        self.progress_tracker.start_module(module_name, description, estimated_tasks=4)
-        
-        try:
-            self.progress_tracker.update_operation("Initializing security scanner")
-            security_scanner = SecurityScanner(self.output_dir, self.config)
-            self.progress_tracker.update_progress(increment=1, message="Scanner initialized")
-            
-            self.progress_tracker.update_operation("Running comprehensive security scan", f"Analyzing {self.target}")
-            security_results = security_scanner.scan_target(self.target)
-            self.results['security_analysis'] = security_results
-            self.progress_tracker.update_progress(increment=1, message="Main target analyzed")
-            
-            # Log main target security findings
-            vulnerabilities = security_results.get('vulnerabilities', [])
-            if vulnerabilities:
-                for vuln in vulnerabilities[:3]:  # Show first 3 vulnerabilities
-                    vuln_name = vuln.get('name', 'Unknown vulnerability')
-                    self.progress_tracker.log_discovery("Security Issue", vuln_name)
-            
-            # Also scan discovered subdomains for security issues
-            subdomain_count = 0
-            if self.results.get('subdomains'):
-                subdomain_security = {}
-                max_subdomains = self.config.get('security', 'max_subdomains', 5)
-                subdomains_to_scan = self.results['subdomains'][:max_subdomains]
-                
-                self.progress_tracker.update_operation(f"Analyzing security for {len(subdomains_to_scan)} subdomains")
-                
-                for subdomain in subdomains_to_scan:
-                    try:
-                        subdomain_results = security_scanner.scan_target(subdomain)
-                        subdomain_security[subdomain] = subdomain_results
-                        subdomain_count += 1
-                        
-                        # Log subdomain vulnerabilities
-                        sub_vulns = subdomain_results.get('vulnerabilities', [])
-                        if sub_vulns:
-                            self.progress_tracker.log_discovery("Subdomain Vulnerability", f"{subdomain}: {len(sub_vulns)} issues")
-                        
-                    except Exception as e:
-                        self.error_handler.handle_network_error(subdomain, e, "security analysis")
-                        
-                self.results['subdomain_security'] = subdomain_security
-                self.progress_tracker.update_progress(increment=1, message=f"Analyzed {subdomain_count} subdomains")
-            else:
-                self.progress_tracker.update_progress(increment=1, message="No subdomains to analyze")
-            
-            self.progress_tracker.update_operation("Processing security analysis results")
-            self.progress_tracker.update_progress(increment=1, message="Results processed")
-            
-            total_vulns = len(vulnerabilities)
-            summary = f"Found {total_vulns} security issues" if total_vulns > 0 else "No critical security issues detected"
-            self.progress_tracker.complete_module(module_name, summary)
-            
-        except Exception as e:
-            self.error_handler.handle_module_failure(module_name, e, is_critical=False)
-            self.progress_tracker.complete_module(module_name, "Failed - continuing scan")
-        
-    def run_osint_collection(self):
-        """Run OSINT data collection"""
-        module_name = "OSINT Collection"
-        description = "Gathering open source intelligence from various sources"
-        
-        self.progress_tracker.start_module(module_name, description, estimated_tasks=4)
-        
-        try:
-            self.progress_tracker.update_operation("Initializing OSINT tools")
-            osint = OSINTCollector(self.output_dir, self.config)
-            self.progress_tracker.update_progress(increment=1, message="Tools initialized")
-            
-            self.progress_tracker.update_operation("Collecting OSINT data", f"Gathering intelligence on {self.target}")
-            self.results['osint'] = osint.collect(self.target)
-            self.progress_tracker.update_progress(increment=2, message="OSINT collection completed")
-            
-            # Log OSINT discoveries
-            osint_results = self.results.get('osint', {})
-            
-            # Log DNS records
-            dns_records = osint_results.get('dns_records', {})
-            if dns_records:
-                for record_type, records in dns_records.items():
-                    if records and len(records) > 0:
-                        self.progress_tracker.log_discovery("DNS Record", f"{record_type}: {len(records)} entries")
-            
-            # Log Wayback Machine findings
-            wayback_data = osint_results.get('wayback', {})
-            if wayback_data.get('urls'):
-                url_count = len(wayback_data['urls'])
-                self.progress_tracker.log_discovery("Wayback URLs", f"{url_count} historical URLs found")
-            
-            # Log GitHub findings
-            github_data = osint_results.get('github', {})
-            if github_data.get('repositories'):
-                repo_count = len(github_data['repositories'])
-                self.progress_tracker.log_discovery("GitHub Repos", f"{repo_count} repositories found")
-            
-            self.progress_tracker.update_operation("Processing OSINT results")
-            self.progress_tracker.update_progress(increment=1, message="Results processed")
-            
-            total_findings = sum([
-                len(dns_records.get(rt, [])) for rt in dns_records.keys()
-            ]) if dns_records else 0
-            
-            summary = f"Collected {total_findings} OSINT data points" if total_findings > 0 else "Limited OSINT data available"
-            self.progress_tracker.complete_module(module_name, summary)
-            
-        except Exception as e:
-            self.error_handler.handle_module_failure(module_name, e, is_critical=False)
-            self.progress_tracker.complete_module(module_name, "Failed - continuing scan")
-        
-    def run_screenshot_capture(self):
-        """Capture screenshots of web services"""
-        module_name = "Screenshot Capture"
-        description = "Capturing visual evidence of web applications"
-        
-        # Count targets for progress tracking
-        targets_to_screenshot = [self.target]
-        if isinstance(self.results['subdomains'], list):
-            targets_to_screenshot.extend(self.results['subdomains'][:5])  # Limit screenshots
-        
-        self.progress_tracker.start_module(module_name, description, estimated_tasks=len(targets_to_screenshot) + 1)
-        
-        try:
-            self.progress_tracker.update_operation("Initializing screenshot tool")
-            screenshotter = Screenshotter(self.output_dir, self.config)
-            self.progress_tracker.update_progress(increment=1, message="Screenshotter initialized")
-            
-            self.progress_tracker.update_operation(f"Capturing screenshots for {len(targets_to_screenshot)} targets")
-            self.results['screenshots'] = screenshotter.capture_screenshots(targets_to_screenshot)
-            
-            # Log screenshot captures
-            screenshots = self.results.get('screenshots', [])
-            for screenshot in screenshots:
-                target = screenshot.get('target', 'Unknown')
-                status = screenshot.get('status', 'Unknown')
-                if status == 'success':
-                    self.progress_tracker.log_discovery("Screenshot", f"{target}")
-                self.progress_tracker.update_progress(increment=1, message=f"Captured {target}")
-            
-            summary = f"Captured {len([s for s in screenshots if s.get('status') == 'success'])} screenshots"
-            self.progress_tracker.complete_module(module_name, summary)
-            
-        except Exception as e:
-            self.error_handler.handle_module_failure(module_name, e, is_critical=False)
-            self.progress_tracker.complete_module(module_name, "Failed - continuing scan")
-        
-    def generate_report(self):
-        """Generate comprehensive report"""
-        print("📊 Generating reports...")
-        
-        # Standard reports
-        report_gen = ReportGenerator(self.output_dir, self.results, self.target, self.config)
-        report_gen.generate_markdown_report()
-        report_gen.generate_json_report()
-        
-        # Advanced reporting (if enabled)
-        if self.config.get('reporting', 'advanced_enabled', True):
-            print("📈 Generating advanced reports...")
-            advanced_gen = AdvancedReportGenerator(self.output_dir, self.results, self.target, self.config)
-            
-            try:
-                generated_reports = advanced_gen.generate_all_reports()
-                if generated_reports:
-                    print(f"✅ Advanced reports generated: {', '.join(generated_reports)}")
-                else:
-                    print("⚠️ No advanced reports were generated")
-            except Exception as e:
-                self.logger.error(f"Advanced reporting failed: {str(e)}")
-                print("⚠️ Advanced reporting failed, continuing with standard reports")
-        
-        print("✅ Reports generated successfully")
-        
-    def _load_existing_results(self):
-        """Load existing scan results for reports-only mode"""
-        try:
-            # Look for existing JSON results in current directory
-            result_files = [
-                f"recon_{self.target}*.json",
-                f"*{self.target}*.json",
-                "scan_results.json",
-                "results.json"
+            cmd = [
+                'gobuster', 'dir',
+                '-u', f"http://{target}",
+                '-w', '/usr/share/wordlists/dirb/common.txt',
+                '-o', str(output_file)
             ]
             
-            for pattern in result_files:
-                import glob
-                matching_files = glob.glob(pattern)
-                if matching_files:
-                    # Use the most recent file
-                    latest_file = max(matching_files, key=os.path.getctime)
-                    print(f"📁 Loading existing results from {latest_file}")
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if result.returncode == 0:
+                results['gobuster']['output'] = str(output_file)
+                
+        except Exception as e:
+            self.logger.warning(f"Gobuster error: {str(e)}")
+    
+    def _run_ffuf(self, target, results):
+        """Run FFUF for fast directory discovery"""
+        try:
+            output_file = self.output_dir / 'directories' / f'{target}_ffuf.json'
+            
+            cmd = [
+                'ffuf',
+                '-u', f"http://{target}/FUZZ",
+                '-w', '/usr/share/wordlists/dirb/common.txt',
+                '-o', str(output_file),
+                '-of', 'json'
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if result.returncode == 0:
+                results['ffuf']['output'] = str(output_file)
+                
+        except Exception as e:
+            self.logger.warning(f"FFUF error: {str(e)}")
+    
+    def _run_feroxbuster(self, target, results):
+        """Run Feroxbuster for recursive directory discovery"""
+        try:
+            output_file = self.output_dir / 'directories' / f'{target}_feroxbuster.txt'
+            
+            cmd = [
+                'feroxbuster',
+                '-u', f"http://{target}/",
+                '-w', '/usr/share/wordlists/dirb/common.txt',
+                '-o', str(output_file)
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if result.returncode == 0:
+                results['feroxbuster']['output'] = str(output_file)
+                
+        except Exception as e:
+            self.logger.warning(f"Feroxbuster error: {str(e)}")
+
+
+# ============================== DNS SCANNER ==============================
+class DNSScanner:
+    """Comprehensive DNS enumeration and analysis"""
+    
+    def __init__(self, output_dir, config):
+        self.output_dir = Path(output_dir)
+        self.config = config
+        self.logger = logging.getLogger(__name__)
+        
+    def scan_dns(self, target):
+        """Run comprehensive DNS analysis"""
+        self.logger.info(f"Starting DNS scan for {target}")
+        
+        results = {
+            'target': target,
+            'dns_records': {},
+            'zone_transfer': {},
+            'dns_security': {}
+        }
+        
+        # DNS record enumeration
+        self._enumerate_dns_records(target, results)
+        self._attempt_zone_transfer(target, results)
+        self._analyze_dns_security(target, results)
+        
+        return results
+    
+    def _enumerate_dns_records(self, target, results):
+        """Enumerate all DNS record types"""
+        record_types = ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'TXT', 'SOA', 'SRV']
+        
+        for record_type in record_types:
+            try:
+                cmd = ['dig', '+short', target, record_type]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                
+                if result.returncode == 0 and result.stdout.strip():
+                    results['dns_records'][record_type] = result.stdout.strip().split('\n')
                     
-                    with open(latest_file, 'r') as f:
-                        loaded_results = json.load(f)
-                        
-                    # Merge loaded results with current results structure
-                    if isinstance(loaded_results, dict):
-                        for key, value in loaded_results.items():
-                            if key in self.results:
-                                self.results[key] = value
-                        return True
-                        
-            # Try to find results in subdirectories
-            recon_dirs = glob.glob(f"recon_{self.target}*")
-            if recon_dirs:
-                latest_dir = max(recon_dirs, key=os.path.getctime)
-                result_file = Path(latest_dir) / 'results.json'
-                
-                if result_file.exists():
-                    print(f"📁 Loading existing results from {result_file}")
-                    with open(result_file, 'r') as f:
-                        loaded_results = json.load(f)
-                        
-                    if isinstance(loaded_results, dict):
-                        for key, value in loaded_results.items():
-                            if key in self.results:
-                                self.results[key] = value
-                        return True
-                        
-            return False
-            
-        except Exception as e:
-            self.logger.error(f"Failed to load existing results: {str(e)}")
-            return False
+            except Exception as e:
+                self.logger.debug(f"DNS {record_type} query error: {str(e)}")
     
-    def run_light_scan(self):
-        """Run light/fast reconnaissance"""
-        scan_modules = ['Port Scanning', 'Subdomain Enumeration', 'Web Scanning', 'Security Analysis', 'Report Generation']
-        self.progress_tracker.start_scan(self.target, "light", len(scan_modules))
-        
+    def _attempt_zone_transfer(self, target, results):
+        """Attempt DNS zone transfer"""
         try:
-            # Basic port scan
-            self.run_nmap_scan('basic')
+            # Get NS records first
+            cmd = ['dig', '+short', target, 'NS']
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             
-            # Quick subdomain enumeration  
-            self.run_subdomain_enumeration()
-            
-            # Basic web scan
-            self.run_web_scanning()
-            
-            # Quick security analysis (if enabled)
-            if self.config.get('security', 'enabled', True):
-                self.run_security_analysis()
-            
-            # Show intermediate summary
-            self.progress_tracker.show_intermediate_summary()
-            
-            # Generate report
-            self.generate_report()
-            
-            # Complete scan
-            self.progress_tracker.complete_scan()
-            
-        except KeyboardInterrupt:
-            print(f"\n{self.error_handler.colors['warning']}⚠️  Scan interrupted by user{self.error_handler.colors['reset']}")
-            self.progress_tracker.cleanup()
-            raise
-        except Exception as e:
-            self.error_handler.handle_module_failure("Light Scan", e, is_critical=True)
-            self.progress_tracker.cleanup()
-            raise
-        
-    def run_full_scan(self):
-        """Run comprehensive reconnaissance with performance safeguards"""
-        all_modules = ['Port Scanning', 'Web Scanning', 'Subdomain Enumeration', 'SSL Analysis', 'Security Analysis', 'OSINT Collection', 'Screenshot Capture', 'Report Generation']
-        self.progress_tracker.start_scan(self.target, "comprehensive", len(all_modules))
-        
-        try:
-            # Check if performance staggering is enabled
-            enable_staggering = self.config.get('performance', 'enable_staggering', True)
-            light_mode = self.config.get('performance', 'light_mode', False)
-            cooldown = self.config.get('performance', 'module_cooldown', 5)
-            
-            if enable_staggering:
-                self.progress_tracker.update_operation("Performance safeguards enabled - modules will be staggered")
-                if light_mode:
-                    self.progress_tracker.update_operation("Light mode enabled - reduced resource usage")
-            
-            # Define heavy modules that should be staggered
-            heavy_modules = [
-                ('nmap_aggressive', self.run_nmap_scan, 'aggressive'),
-                ('web_scanning', self.run_web_scanning, None),
-                ('subdomain_enum', self.run_subdomain_enumeration, None)
-            ]
-            
-            # Define light modules that can run without staggering  
-            light_modules = [
-                ('ssl_analysis', self.run_ssl_analysis, None),
-                ('security_analysis', self.run_security_analysis, None),
-                ('osint_collection', self.run_osint_collection, None),
-                ('screenshot_capture', self.run_screenshot_capture, None)
-            ]
-            
-            # Execute heavy modules with performance safeguards
-            for i, (module_name, module_func, module_args) in enumerate(heavy_modules):
-                self._execute_module_safely(module_name, module_func, module_args)
+            if result.returncode == 0:
+                ns_servers = result.stdout.strip().split('\n')
                 
-                # Add cooldown between heavy modules (except for the last one)
-                if enable_staggering and i < len(heavy_modules) - 1:
-                    self._module_cooldown(cooldown, f"before next heavy module")
-            
-            # Show intermediate summary after heavy modules
-            self.progress_tracker.show_intermediate_summary()
-            
-            # Execute light modules
-            for module_name, module_func, module_args in light_modules:
-                self._execute_module_safely(module_name, module_func, module_args)
-            
-            # Generate comprehensive report
-            self.generate_report()
-            
-            # Complete scan
-            self.progress_tracker.complete_scan()
-            
-        except KeyboardInterrupt:
-            print(f"\n{self.error_handler.colors['warning']}⚠️  Scan interrupted by user{self.error_handler.colors['reset']}")
-            self.progress_tracker.cleanup()
-            raise
+                for ns in ns_servers[:3]:  # Limit attempts
+                    try:
+                        cmd = ['dig', f'@{ns.strip()}', target, 'AXFR']
+                        transfer_result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                        
+                        if 'XFR size' in transfer_result.stdout:
+                            results['zone_transfer'][ns] = 'SUCCESS'
+                        else:
+                            results['zone_transfer'][ns] = 'REFUSED'
+                            
+                    except Exception as e:
+                        results['zone_transfer'][ns] = f'ERROR: {str(e)}'
+                        
         except Exception as e:
-            self.error_handler.handle_module_failure("Full Scan", e, is_critical=True)
-            self.progress_tracker.cleanup()
-            raise
+            self.logger.warning(f"Zone transfer error: {str(e)}")
     
-    def _execute_module_safely(self, module_name, module_func, module_args=None):
-        """Execute a module with resource monitoring and error handling"""
+    def _analyze_dns_security(self, target, results):
+        """Analyze DNS security features"""
         try:
-            # Check system resources before starting heavy modules
-            if self.config.get('performance', 'resource_monitoring', True):
-                if not self.resource_monitor.wait_for_resources():
-                    print(f"⚠️  System resources limited, proceeding with {module_name} anyway")
+            # Check DNSSEC
+            cmd = ['dig', '+dnssec', target]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             
-            # Get system stats before module execution
-            stats_before = self.resource_monitor.get_system_stats()
-            if stats_before['status'] == 'active':
-                print(f"📊 System: CPU {stats_before['cpu_percent']:.1f}%, Memory {stats_before['memory_percent']:.1f}%")
-            
-            # Execute the module
-            start_time = time.time()
-            if module_args:
-                result = module_func(module_args)
-            else:
-                result = module_func()
-                
-            execution_time = time.time() - start_time
-            print(f"⏱️  {module_name} completed in {execution_time:.1f}s")
-            
-            return result
+            results['dns_security']['dnssec'] = 'RRSIG' in result.stdout
             
         except Exception as e:
-            print(f"❌ Error in {module_name}: {str(e)}")
-            return None
+            self.logger.warning(f"DNS security analysis error: {str(e)}")
+
+
+# ============================== NETWORK SCANNER ==============================
+class NetworkScanner:
+    """Network topology mapping and analysis"""
     
-    def _module_cooldown(self, seconds, reason=""):
-        """Wait between modules to prevent system overload"""
-        if seconds <= 0:
-            return
-            
-        print(f"⏸️  Cooling down for {seconds}s {reason}...")
+    def __init__(self, output_dir, config):
+        self.output_dir = Path(output_dir)
+        self.config = config
+        self.logger = logging.getLogger(__name__)
         
-        # Show system stats during cooldown
-        for i in range(seconds):
-            if i == 0 or i == seconds - 1:  # Show stats at start and end
-                stats = self.resource_monitor.get_system_stats()
-                if stats['status'] == 'active':
-                    print(f"   📊 CPU: {stats['cpu_percent']:.1f}%, Memory: {stats['memory_percent']:.1f}%, Available: {stats['memory_available_mb']:.0f}MB")
-            time.sleep(1)
+    def scan_network(self, target):
+        """Run comprehensive network analysis"""
+        self.logger.info(f"Starting network scan for {target}")
         
-        print("▶️  Resuming scan...")
+        results = {
+            'target': target,
+            'network_discovery': {},
+            'topology_mapping': {},
+            'route_analysis': {}
+        }
+        
+        # Network discovery and mapping
+        self._discover_network_hosts(target, results)
+        self._map_network_topology(target, results)
+        self._analyze_routing(target, results)
+        
+        return results
     
-    def run_light_scan(self):
-        """Run lightweight reconnaissance scan"""
-        print("🚀 Running lightweight reconnaissance scan...")
-        
-        # Light scan with reduced resource usage
-        self.run_nmap_scan('basic')  # Use basic scan instead of aggressive
-        self.run_subdomain_enumeration()
-        self.run_ssl_analysis()
-        
-        # Security analysis (if enabled)
-        if self.config.get('security', 'enabled', True):
-            self.run_security_analysis()
-            
-        self.run_osint_collection()
-        
-        # Generate report
-        self.generate_report()
-        
-    def run_single_target(self, target, scan_type='basic'):
-        """Run reconnaissance on a single target"""
-        if not self.validate_target(target):
-            print(f"❌ Invalid target: {target}")
-            return False
-            
-        self.target = target
-        self.create_output_directory(target)
-        self.setup_logging()
-        
-        print(f"🎯 Starting reconnaissance on target: {target}")
-        print(f"📋 Scan type: {scan_type}")
-        
+    def _discover_network_hosts(self, target, results):
+        """Discover live hosts in network"""
         try:
-            if scan_type == 'light':
-                self.run_light_scan()
-            else:
-                self.run_full_scan()
+            # Ping sweep for network discovery
+            cmd = ['nmap', '-sn', target]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            
+            if result.returncode == 0:
+                results['network_discovery']['ping_sweep'] = result.stdout
                 
-            end_time = datetime.now()
-            duration = end_time - self.start_time
-            print(f"🎉 Reconnaissance completed in {duration}")
-            print(f"📁 Results saved in: {self.output_dir}")
-            
-            return True
-            
         except Exception as e:
-            print(f"❌ Error during reconnaissance: {str(e)}")
-            return False
-            
-    def run_multiple_targets(self, targets_file, scan_type='basic'):
-        """Run reconnaissance on multiple targets from file"""
+            self.logger.warning(f"Network discovery error: {str(e)}")
+    
+    def _map_network_topology(self, target, results):
+        """Map network topology"""
         try:
-            with open(targets_file, 'r') as f:
-                targets = [line.strip() for line in f if line.strip()]
-                
-            print(f"📋 Loaded {len(targets)} targets from {targets_file}")
+            # Traceroute for topology mapping
+            cmd = ['traceroute', target]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
             
-            for target in targets:
-                print(f"🎯 Processing target: {target}")
-                self.run_single_target(target, scan_type)
+            if result.returncode == 0:
+                results['topology_mapping']['traceroute'] = result.stdout
                 
-        except FileNotFoundError:
-            print(f"❌ Targets file not found: {targets_file}")
-            return False
         except Exception as e:
-            print(f"❌ Error processing targets file: {str(e)}")
-            return False
+            self.logger.warning(f"Topology mapping error: {str(e)}")
+    
+    def _analyze_routing(self, target, results):
+        """Analyze routing information"""
+        try:
+            # Route analysis
+            cmd = ['route', '-n']
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             
-        return True
+            if result.returncode == 0:
+                results['route_analysis']['routing_table'] = result.stdout
+                
+        except Exception as e:
+            self.logger.warning(f"Route analysis error: {str(e)}")
+
+
+# ============================== API SCANNER ==============================
+class APIScanner:
+    """REST API and web service scanner"""
+    
+    def __init__(self, output_dir, config):
+        self.output_dir = Path(output_dir)
+        self.config = config
+        self.logger = logging.getLogger(__name__)
+        
+    def scan_apis(self, target):
+        """Run comprehensive API scanning"""
+        self.logger.info(f"Starting API scan for {target}")
+        
+        results = {
+            'target': target,
+            'api_discovery': {},
+            'endpoint_analysis': {},
+            'security_testing': {}
+        }
+        
+        # API discovery and analysis
+        self._discover_api_endpoints(target, results)
+        self._analyze_api_security(target, results)
+        
+        return results
+    
+    def _discover_api_endpoints(self, target, results):
+        """Discover API endpoints"""
+        try:
+            # Common API paths
+            api_paths = ['/api', '/v1', '/v2', '/rest', '/graphql', '/swagger', '/docs']
+            
+            for path in api_paths:
+                url = f"http://{target}{path}"
+                try:
+                    response = requests.get(url, timeout=10)
+                    if response.status_code == 200:
+                        results['api_discovery'][path] = {
+                            'status': response.status_code,
+                            'content_type': response.headers.get('content-type', ''),
+                            'content_length': len(response.content)
+                        }
+                except:
+                    continue
+                    
+        except Exception as e:
+            self.logger.warning(f"API discovery error: {str(e)}")
+    
+    def _analyze_api_security(self, target, results):
+        """Analyze API security"""
+        try:
+            # Check for common API security issues
+            url = f"http://{target}/api"
+            
+            # Test for CORS issues
+            headers = {'Origin': 'https://evil.com'}
+            response = requests.options(url, headers=headers, timeout=10)
+            
+            if 'Access-Control-Allow-Origin' in response.headers:
+                results['security_testing']['cors'] = {
+                    'vulnerable': '*' in response.headers['Access-Control-Allow-Origin'],
+                    'header': response.headers['Access-Control-Allow-Origin']
+                }
+                
+        except Exception as e:
+            self.logger.warning(f"API security analysis error: {str(e)}")
 
 
 def print_banner():
-    """Print banner"""
+    """Print the application banner"""
     banner = """
-╔══════════════════════════════════════════════════════════════╗
-║                  🔍 RECON WRAPPER - ALL-IN-ONE                ║
-║              Comprehensive Reconnaissance Tool                ║
-║                     Ethical Hacking Edition                  ║
-╚══════════════════════════════════════════════════════════════╝
-
-🚀 Features:
-    • Port Scanning (Nmap, Masscan, Hybrid)
-    • Subdomain Enumeration (multi-tool, DNSSEC, zone transfer)
-    • Web Application Scanning (Nikto, tech stack, CMS, API fuzzing)
-    • SSL/TLS Analysis (Heartbleed, POODLE, BEAST, DROWN, weak ciphers)
-    • OSINT Collection (DNS, Wayback Machine, GitHub dorking)
-    • Screenshot Capture
-    • Advanced Directory Discovery (gobuster, ffuf, feroxbuster)
-    • Vulnerability Scanning (CVE mapping, vulners, vulscan)
-    • Risk Scoring and Assessment (CVSS v3.1)
-    • Compliance Mapping (OWASP Top 10, NIST, PCI DSS, ISO27001)
-    • Multi-format Reporting (CSV, Excel, Word, PPTX, PDF)
-    • Historical Baseline Tracking
-    • Evidence Collection (screenshots, packets, logs)
-    • API Endpoint Discovery and Fuzzing
-    • Technology Stack Detection (Wappalyzer-style)
-    • Advanced Error Handling and Fallbacks
-    • Production-ready for authorized security testing
-
-⚠️  For authorized testing only! Always get permission first.
-"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    RECON WRAPPER - ALL-IN-ONE VERSION                       ║
+║                   Comprehensive Reconnaissance Toolkit                      ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  Features: Port Scanning • Subdomain Enum • Web Scanning • SSL Analysis    ║
+║           OSINT Collection • Screenshots • Advanced Reporting               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+    """
     print(banner)
 
 
+# ============================== RISK SCORER ==============================
 def main():
     """Main function"""
     print_banner()
@@ -10953,9 +5664,13 @@ Examples:
         print(f"\n✅ Reconnaissance completed successfully!")
         if hasattr(recon, 'output_dir'):
             print(f"📁 Results saved in: {recon.output_dir}")
-        print("\n🎯 Summary of tools that may be needed:")
-        print("   • nmap, nikto, sublist3r, assetfinder, subfinder")
-        print("   • dig, whois, testssl.sh, gowitness")
+        print("\n🎯 External tools used in this toolkit (23 total):")
+        print("   • Port Scanning: nmap, masscan")
+        print("   • Subdomain Discovery: sublist3r, assetfinder, subfinder, amass")
+        print("   • Web Scanning: nikto, gobuster, ffuf, feroxbuster, dirb, wfuzz")
+        print("   • Vulnerability: nuclei, sqlmap, testssl")
+        print("   • OSINT: theharvester, recon-ng, waybackpy, shodan")
+        print("   • Network: dig, httpx, whatweb, wafw00f")
         print("   • Install with: ./install.sh")
     else:
         print(f"\n❌ Reconnaissance failed!")
