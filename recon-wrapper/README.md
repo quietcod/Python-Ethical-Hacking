@@ -1,4 +1,42 @@
-<!-- Usage Instructions -->
+<!-- U# 🎯 Recon All-in-One - Enterprise Reconnaissance Framework
+
+A comprehensive, next-generation reconnaissance tool designed for penetration testing, security research, and authorized security assessments. This tool cons## 🎯 Scan Type### 🔍 Full Scan (`--full`)
+- **Comprehensive port scanning** with service detection
+- **Multi-tool subdomain enumeration** (sublist3r, assetfinder, subfinder)
+- **Advanced web application analysis** with Nikto integration
+- **SSL/TLS security assessment** with vulnerability testing
+- **Enhanced reporting** with risk assessment and compliance mapping
+- **Time**: ~15-30 minutes
+### 🏃 Fast Scan (`--fast`)
+- **Basic port scan** (top 1000 ports with nmap)
+- **Quick subdomain enumeration** with primary tools
+- **Basic technology detection** and CMS identification
+- **Essential OSINT collection** (WHOIS, DNS records)
+- **Time**: ~5-10 minutes
+
+### 🔍 Full Scan (`--full`)
+- **Comprehensive port scanning** with service detection
+- **Multi-tool subdomain enumeration** (sublist3r, assetfinder, subfinder)
+- **Advanced web application analysis** with Nikto integration
+- **SSL/TLS security assessment** with vulnerability testing
+- **Enhanced reporting** with risk assessment and compliance mapping
+- **Time**: ~15-30 minutesiple scanning modules** across **comprehensive capability areas** into a single, powerful Python framework with **real-time progress tracking**, **enhanced error handling**, and **enterprise-grade features**.
+
+## 🎯 Overview
+
+**Recon All-in-One** is an enterprise-grade reconnaissance framework that integrates modern security tools and techniques for comprehensive target assessment. Built for security professionals, penetration testers, and bug bounty hunters with advanced features including **progress bars**, **intelligent error recovery**, **resource monitoring**, and **comprehensive reporting**.
+
+### 🏆 Key Highlights
+- **Real-time progress tracking** with tqdm integration
+- **Enhanced error handling** with intelligent suggestions
+- **Resource monitoring** and performance optimization
+- **Modern tool integration** (nmap, nikto, sublist3r, masscan)
+- **Advanced vulnerability detection** with SSL/TLS analysis
+- **Comprehensive OSINT capabilities** with historical analysis
+- **Production-ready** with graceful error handling and fallbacks
+- **Multi-format reporting** (JSON, CSV, HTML, PDF)
+- **Configuration management** with YAML/JSON support
+- **Compliance mapping** (OWASP, NIST, PCI DSS)ons -->
 cd /home/quiet/Documents/Python-Ethical-Hacking
 source recon-env/bin/activate
 python recon-wrapper/recon_all_in_one.py [options]
@@ -21,67 +59,65 @@ A comprehensive, next-generation reconnaissance tool designed for penetration te
 
 ## � Enhanced Features
 
-### **1. 🗂️ Enhanced Directory Discovery**
-- **gobuster** integration for high-performance discovery
-- **ffuf** integration for advanced web fuzzing  
-- **feroxbuster** for recursive content discovery
-- Multi-tool approach with intelligent fallbacks
+### **1. � Real-Time Progress Tracking**
+- **Advanced progress bars** with tqdm integration
+- **Real-time status updates** for all scanning modules
+- **Live discovery notifications** with color-coded output
+- **Performance monitoring** and resource usage tracking
 
-### **2. ⚡ Ultra-Fast Port Scanning**
-- **Masscan** integration - scan all 65,535 ports in seconds
-- **Hybrid scanning** - Masscan discovery + Nmap service detection
-- JSON output parsing for structured results
+### **2. 🛡️ Enhanced Error Handling**
+- **Intelligent error recovery** with actionable suggestions
+- **API error handling** with rate limit detection
+- **Network connectivity fallbacks** with timeout management
+- **Tool availability checks** with alternative suggestions
 
-### **3. 🌐 Advanced DNS Enumeration**
-- Enhanced DNS security checks (DNSSEC, SPF, DMARC, CAA)
-- Zone transfer detection and testing
-- DNS over HTTPS support
-- Subdomain brute-forcing with comprehensive wordlists
+### **3. 🔍 Comprehensive Port Scanning**
+- **Nmap integration** with XML output parsing
+- **Service detection** and version identification
+- **Custom port ranges** and scanning profiles
+- **SSL/TLS service discovery** on multiple ports
 
-### **4. 🕰️ Wayback Machine & Historical Analysis**
-- Historical URL discovery from Internet Archive
-- File and directory intelligence from archived snapshots
-- Interesting file detection (configs, backups, etc.)
-- Temporal security analysis
+### **4. 🌐 Advanced DNS Enumeration**
+- **Multi-server DNS queries** with fallback servers
+- **Subdomain enumeration** with multiple tools (sublist3r, assetfinder, subfinder)
+- **DNS record analysis** (A, AAAA, MX, TXT, NS, SOA)
+- **Zone transfer testing** and DNSSEC validation
 
-### **5. 🔍 GitHub OSINT & Dorking**
-- GitHub search integration for leaked secrets
-- Configuration file discovery (database configs, API keys)
-- Source code intelligence gathering
-- Security credential detection
+### **5. 🕸️ Web Application Analysis**
+- **Technology stack detection** with confidence scoring
+- **Directory brute-forcing** with custom wordlists
+- **CMS detection** (WordPress, Drupal, Joomla)
+- **Web vulnerability scanning** with Nikto integration
 
-### **6. 🎯 Advanced Technology Stack Detection**
-- Wappalyzer-style fingerprinting with confidence scoring
-- CMS version detection (WordPress, Drupal, Joomla)
-- Framework identification (React, Angular, Laravel, Django)
-- Server and database technology mapping
-- JavaScript library detection
+### **6. 🔒 SSL/TLS Security Analysis**
+- **Certificate analysis** with validity checking
+- **SSL/TLS vulnerability detection** (Heartbleed, POODLE, BEAST, DROWN)
+- **Cipher suite analysis** and weak protocol detection
+- **Certificate transparency** log monitoring
 
-### **7. 🔌 API Fuzzing & Enumeration**
-- Comprehensive API endpoint discovery
-- HTTP method testing (GET, POST, PUT, DELETE, etc.)
-- Parameter fuzzing with injection vectors
-- Rate limiting detection and authentication bypass testing
+### **7. 📸 Visual Intelligence**
+- **Screenshot capture** with Selenium/gowitness
+- **Visual evidence collection** for reporting
+- **Responsive design detection** across multiple resolutions
+- **UI/UX analysis** for phishing detection
 
-### **8. 🛡️ Comprehensive Vulnerability Scanning**
-- Nmap vulnerability scripts integration (vulners, vulscan)
-- CVE detection and mapping
-- Multi-tool vulnerability assessment
-- Automated exploit discovery
+### **8. �️ OSINT & Intelligence Gathering**
+- **WHOIS information** extraction and analysis
+- **Historical data** from Wayback Machine
+- **Social media profiling** and account discovery
+- **Threat intelligence** correlation
 
-### **9. 🔒 SSL/TLS Security Analysis**
-- **Heartbleed** detection (CVE-2014-0160)
-- **POODLE** vulnerability testing (CVE-2014-3566)
-- **BEAST** attack detection (CVE-2011-3389)
-- **DROWN** vulnerability scanning (CVE-2016-0800)
-- Weak cipher identification and certificate security analysis
+### **9. 📊 Advanced Reporting**
+- **Multi-format reports** (JSON, CSV, HTML, PDF)
+- **Risk assessment** with CVSS scoring
+- **Compliance mapping** (OWASP Top 10, NIST, PCI DSS)
+- **Executive summaries** with actionable recommendations
 
-### **10. 🕸️ Web Application Security Testing**
-- SQL injection detection with error pattern matching
-- Cross-Site Scripting (XSS) vulnerability testing
-- Local File Inclusion (LFI) detection
-- Command injection testing
-- Service-specific vulnerability checks (SSH, FTP, databases)
+### **10. ⚙️ Configuration & Performance**
+- **Flexible configuration** with YAML/JSON support
+- **Resource monitoring** with CPU/memory tracking
+- **Module staggering** for performance optimization
+- **Light mode** for resource-constrained environments
 
 ## 🚀 Quick Start
 
@@ -92,10 +128,10 @@ sudo apt update
 sudo apt install python3 python3-pip
 
 # Core dependencies
-pip3 install requests python-whois cryptography selenium scapy
+pip3 install requests python-whois cryptography selenium tqdm dnspython
 
 # External tools (optional but recommended)
-sudo apt install nmap nikto gobuster masscan
+sudo apt install nmap nikto sublist3r assetfinder subfinder gobuster
 ```
 
 ### Basic Usage
@@ -105,35 +141,35 @@ sudo apt install nmap nikto gobuster masscan
 cd recon-wrapper
 
 # Full reconnaissance scan
-python3 recon_all_in_one.py --target example.com --all
+python3 recon_all_in_one.py --domain example.com --full
 
 # Fast reconnaissance
-python3 recon_all_in_one.py --target example.com --fast
+python3 recon_all_in_one.py --domain example.com --fast
 
 # IP address scanning
-python3 recon_all_in_one.py --target 192.168.1.1 --full
+python3 recon_all_in_one.py --ip 192.168.1.1 --full
 ```
 
 ### Advanced Usage Examples
 
 ```bash
 # Comprehensive security assessment
-python3 recon_all_in_one.py --target example.com --security --all-vulns
+python3 recon_all_in_one.py --domain example.com --full --verbose
 
-# API-focused reconnaissance
-python3 recon_all_in_one.py --target api.example.com --api-fuzzing --tech-stack
+# Light mode for resource-constrained environments
+python3 recon_all_in_one.py --domain example.com --fast --light-mode
 
-# Ultra-fast port scanning with masscan
-python3 recon_all_in_one.py --target 192.168.1.0/24 --ports --masscan
+# Custom configuration and performance tuning
+python3 recon_all_in_one.py --domain example.com --full --config custom.json --threads 20
 
-# OSINT and historical analysis
-python3 recon_all_in_one.py --target example.com --osint --wayback --github
+# Offline mode for internal networks
+python3 recon_all_in_one.py --ip 10.0.0.1 --full --offline --dns-server 10.0.0.53
 
-# Enhanced web application testing
-python3 recon_all_in_one.py --target webapp.com --web --enhanced-discovery
+# Advanced security scanning with custom ports
+python3 recon_all_in_one.py --domain example.com --full --security-ports 443 8443 9443
 
-# SSL/TLS security analysis
-python3 recon_all_in_one.py --target secure.example.com --ssl-analysis
+# Generate reports from existing data
+python3 recon_all_in_one.py --domain example.com --reports-only --pdf-reports --csv-export
 ```
 
 ### Multiple Target Scanning
@@ -152,38 +188,49 @@ python3 recon_all_in_one.py --targets-file targets.txt --full
 Usage: python3 recon_all_in_one.py [options]
 
 Target Options:
-  --target TARGET           Single target (domain or IP)
+  --domain DOMAIN           Single domain target
+  --ip IP                   Single IP target
   --targets-file FILE       File containing multiple targets
 
 Scan Types:
   --fast                    Quick reconnaissance scan
   --full                    Comprehensive assessment (default)
-  --all                     All modules with maximum coverage
-
-Enhanced Features:
-  --enhanced-discovery      Use gobuster, ffuf, feroxbuster
-  --masscan                 Ultra-fast port scanning
-  --api-fuzzing            API endpoint testing and fuzzing
-  --tech-stack             Advanced technology detection
-  --wayback                Historical analysis via Wayback Machine
-  --github                 GitHub OSINT and dorking
-  --ssl-analysis           Comprehensive SSL/TLS testing
-  --all-vulns              Full vulnerability assessment
-
-Module Selection:
-  --ports                  Port scanning only
-  --web                    Web application scanning
-  --dns                    DNS enumeration
-  --osint                  OSINT collection
-  --security               Security/vulnerability scanning
 
 Configuration:
-  --config CONFIG          Custom configuration file
-  --threads THREADS        Number of threads (default: 10)
-  --timeout TIMEOUT        Timeout in seconds (default: 300)
-  --output-dir DIR         Custom output directory
-  --verbose, -v            Verbose output
-  --quiet, -q              Minimal output
+  --config CONFIG           Custom configuration file (JSON/YAML)
+  --threads THREADS         Number of threads (default: 10)
+  --timeout TIMEOUT         Timeout in seconds (default: 300)
+  --verbose, -v             Verbose output
+
+Network & Environment:
+  --offline                 Run in offline mode (no external sources)
+  --dns-server DNS          Custom DNS server for internal networks
+  --cidr CIDR               CIDR range for internal network sweeps
+  --light-mode              Reduce resource usage across all modules
+
+Directory Brute Force:
+  --dir-wordlist FILE       Custom wordlist for directory brute force
+  --rate-limit SECONDS      Rate limit between requests (default: 0)
+  --dir-threads THREADS     Threads for directory brute force (default: 10)
+
+Performance & Resource Management:
+  --no-stagger              Disable module staggering
+  --cooldown SECONDS        Wait time between heavy modules (default: 5)
+  --no-resource-monitor     Disable system resource monitoring
+
+Security Analysis:
+  --no-security             Skip security analysis (SSL/TLS, vulnerabilities)
+  --security-ports PORTS    Ports to check for SSL/TLS services
+  --no-cert-transparency    Skip Certificate Transparency log queries
+  --security-timeout TIME   Timeout for security checks (default: 30)
+
+Advanced Reporting:
+  --no-advanced-reports     Skip advanced reporting features
+  --no-risk-assessment      Skip risk scoring and assessment
+  --no-compliance           Skip compliance framework analysis
+  --reports-only            Generate only reports (skip scanning)
+  --pdf-reports             Enable PDF report generation
+  --csv-export              Enable CSV data export
 ```
 
 ## � Scan Types Explained
@@ -279,28 +326,28 @@ This tool is designed for **authorized security testing only**.
 ### 🎯 Penetration Testing
 ```bash
 # External penetration test
-python3 recon_all_in_one.py --target client-domain.com --all --verbose
+python3 recon_all_in_one.py --domain client-domain.com --full --verbose
 
 # Internal infrastructure assessment
-python3 recon_all_in_one.py --target 10.0.0.0/8 --ports --masscan
+python3 recon_all_in_one.py --ip 10.0.0.1 --full --offline --dns-server 10.0.0.53
 ```
 
 ### 🐛 Bug Bounty Hunting
 ```bash
 # Comprehensive scope reconnaissance
-python3 recon_all_in_one.py --targets-file bug-bounty-scope.txt --all
+python3 recon_all_in_one.py --targets-file bug-bounty-scope.txt --full
 
-# API-focused hunting
-python3 recon_all_in_one.py --target api.target.com --api-fuzzing --github
+# Fast reconnaissance for multiple targets
+python3 recon_all_in_one.py --domain api.target.com --fast --verbose
 ```
 
 ### 🔬 Security Research
 ```bash
-# Historical vulnerability analysis
-python3 recon_all_in_one.py --target research-target.com --wayback --tech-stack
+# Comprehensive security analysis
+python3 recon_all_in_one.py --domain research-target.com --full --security-timeout 60
 
-# SSL/TLS security research
-python3 recon_all_in_one.py --target ssl-test.com --ssl-analysis --all-vulns
+# SSL/TLS focused research
+python3 recon_all_in_one.py --domain ssl-test.com --full --security-ports 443 8443 9443
 ```
 
 ## 📊 Performance Benchmarks
@@ -309,8 +356,6 @@ python3 recon_all_in_one.py --target ssl-test.com --ssl-analysis --all-vulns
 |-----------|---------------|------------|----------|
 | Fast | Top 1000 | 5-10 min | Basic |
 | Full | Top 10000 | 15-30 min | Comprehensive |
-| Masscan | All 65535 | 2-5 min | Complete |
-| All Modules | All 65535 + Enhanced | 30-60 min | Maximum |
 
 ## 🤝 Contributing
 
@@ -323,13 +368,23 @@ Contributions are welcome! Please ensure:
 
 ## 📈 Version History
 
-### 🎉 **v2.0 - Enhanced Framework** (August 2025)
-- **42 new methods** across 4 core classes
-- **Modern tool integration**: gobuster, ffuf, feroxbuster, masscan
-- **Advanced vulnerability detection** with CVE mapping
-- **Comprehensive OSINT** with GitHub and Wayback Machine
-- **API security testing** and technology fingerprinting
-- **Production-ready** error handling
+### 🎉 **v3.0 - Enterprise Framework** (August 2025)
+- **Real-time progress tracking** with tqdm integration
+- **Enhanced error handling** with intelligent suggestions
+- **Resource monitoring** and performance optimization
+- **Advanced configuration** with YAML/JSON support
+- **Comprehensive reporting** with PDF/CSV export
+- **SSL/TLS security analysis** with vulnerability detection
+- **Multi-format output** and compliance mapping
+- **Light mode** for resource-constrained environments
+- **Module staggering** for performance optimization
+- **Production-ready** error handling and fallbacks
+
+### v2.0 - Enhanced Framework (July 2025)
+- Enhanced scanning capabilities
+- Multi-tool integration
+- Advanced vulnerability detection
+- Comprehensive OSINT features
 
 ### v1.0 - Initial Release
 - Basic reconnaissance capabilities
@@ -344,6 +399,10 @@ For issues, questions, or contributions:
 - **Security**: Report vulnerabilities responsibly
 
 ---
+
+**🎯 Enterprise reconnaissance made simple. Always hack ethically and legally.**
+
+*"The best offense starts with comprehensive reconnaissance with real-time insights."*
 
 **🎯 Advanced reconnaissance made simple. Always hack ethically and legally.**
 

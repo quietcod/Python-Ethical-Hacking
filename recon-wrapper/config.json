@@ -1,0 +1,180 @@
+{
+    "nmap": {
+        "basic_flags": "-sV -sC --version-intensity 1",
+        "aggressive_flags": "-A -T4 -O",
+        "timeout": 300,
+        "top_ports": 1000
+    },
+    "subdomains": {
+        "tools": [
+            "sublist3r",
+            "assetfinder",
+            "amass",
+            "subfinder"
+        ],
+        "wordlist": "/usr/share/wordlists/SecLists/Discovery/DNS/subdomains-top1million-110000.txt",
+        "timeout": 600,
+        "threads": 50
+    },
+    "web": {
+        "nikto_flags": "-h",
+        "whatweb_flags": "-a 3",
+        "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+        "timeout": 180,
+        "follow_redirects": true,
+        "screenshots": true
+    },
+    "wordpress": {
+        "wpscan_flags": "--enumerate ap,at,u,dbe",
+        "api_token": "",
+        "timeout": 300
+    },
+    "ssl": {
+        "testssl_flags": "--fast --parallel",
+        "timeout": 120
+    },
+    "security": {
+        "enabled": true,
+        "ssl_analysis": true,
+        "cert_transparency": true,
+        "check_vulnerabilities": true,
+        "security_headers": true,
+        "cipher_analysis": true,
+        "protocol_analysis": true,
+        "max_subdomains": 5,
+        "ports": [
+            443,
+            8443,
+            9443,
+            8080,
+            8008,
+            8888
+        ],
+        "timeout": 30
+    },
+    "osint": {
+        "theharvester_sources": "baidu,bing,google,yahoo,duckduckgo",
+        "shodan_api_key": "YOUR_SHODAN_API_KEY_HERE",
+        "virustotal_api_key": "",
+        "timeout": 240
+    },
+    "screenshots": {
+        "tool": "gowitness",
+        "resolution": "1440,900",
+        "timeout": 30,
+        "threads": 10
+    },
+    "general": {
+        "threads": 8,
+        "timeout": 30,
+        "user_agent": "ReconWrapper/1.0",
+        "delay": 1,
+        "retries": 3,
+        "offline_mode": false,
+        "dns_server": "",
+        "cidr_range": "",
+        "dir_wordlist": ""
+    },
+    "mode": {
+        "offline": false,
+        "skip_online_modules": [
+            "whois",
+            "shodan",
+            "crtsh",
+            "sublist3r",
+            "assetfinder",
+            "subfinder",
+            "theharvester"
+        ]
+    },
+    "dns": {
+        "servers": []
+    },
+    "bruteforce": {
+        "dir_wordlist": "/usr/share/wordlists/SecLists/Discovery/Web-Content/raft-medium-directories.txt",
+        "dns_wordlist": "/usr/share/wordlists/SecLists/Discovery/DNS/subdomains-top1million-110000.txt",
+        "rate_limit": 0,
+        "threads": 10,
+        "max_words": 5000
+    },
+    "performance": {
+        "max_concurrent_modules": 1,
+        "module_cooldown": 5,
+        "memory_limit_mb": 1024,
+        "cpu_limit_percent": 80,
+        "enable_staggering": true,
+        "light_mode": false,
+        "resource_monitoring": true
+    },
+    "output": {
+        "format": "json",
+        "compress": false,
+        "cleanup_raw": false
+    },
+    "reporting": {
+        "advanced_enabled": true,
+        "generate_pdf": true,
+        "generate_risk_assessment": true,
+        "generate_compliance": true,
+        "generate_csv": true,
+        "risk_scoring": {
+            "enabled": true,
+            "weights": {
+                "critical_vulns": 30,
+                "high_vulns": 20,
+                "medium_vulns": 10,
+                "low_vulns": 5,
+                "expired_certs": 25,
+                "weak_protocols": 15,
+                "missing_headers": 10,
+                "open_ports": 8,
+                "exposed_services": 12
+            }
+        },
+        "compliance_frameworks": [
+            "owasp",
+            "nist",
+            "pci_dss"
+        ],
+        "executive_summary": true,
+        "technical_details": true,
+        "visualization": {
+            "charts": true,
+            "interactive": false,
+            "export_images": false
+        }
+    },
+    "ui": {
+        "colors": true,
+        "progress_bars": true,
+        "real_time_updates": true,
+        "discovery_notifications": true,
+        "detailed_errors": true,
+        "intermediate_summaries": true,
+        "module_timings": true,
+        "eta_estimates": true
+    },
+    "phase2": {
+        "database_enabled": true,
+        "resume_capability": true,
+        "checkpoint_frequency": 60,
+        "max_resume_sessions": 10,
+        "auto_cleanup_days": 30,
+        "error_recovery": {
+            "enabled": true,
+            "max_retries": 3,
+            "retry_delay": 5,
+            "fallback_enabled": true,
+            "partial_results": true
+        },
+        "historical_comparison": {
+            "enabled": true,
+            "baseline_days": 30,
+            "change_detection": true,
+            "trend_analysis": true
+        }
+    },
+    "database": {
+        "enabled": true
+    }
+}
