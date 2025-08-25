@@ -1,4 +1,0 @@
-# Nmap 7.95 scan initiated Mon Aug 25 13:19:44 2025 as: /usr/lib/nmap/nmap --privileged -sV -sC -oA recon_results/google.com/nmap/google.com_basic --open google.com
-Host: 172.217.26.46 (nrt12s17-in-f46.1e100.net)	Status: Up
-Host: 172.217.26.46 (nrt12s17-in-f46.1e100.net)	Ports: 80/open/tcp//tcpwrapped///, 443/open/tcp//tcpwrapped///
-# Nmap done at Mon Aug 25 13:19:58 2025 -- 1 IP address (1 host up) scanned in 14.14 seconds

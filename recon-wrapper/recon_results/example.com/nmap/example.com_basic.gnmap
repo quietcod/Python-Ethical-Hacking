@@ -1,4 +1,0 @@
-# Nmap 7.95 scan initiated Mon Aug 25 17:37:53 2025 as: /usr/lib/nmap/nmap --privileged -sV -sC -oA recon_results/example.com/nmap/example.com_basic --open example.com
-Host: 23.215.0.136 (a23-215-0-136.deploy.static.akamaitechnologies.com)	Status: Up
-Host: 23.215.0.136 (a23-215-0-136.deploy.static.akamaitechnologies.com)	Ports: 80/open/tcp//tcpwrapped///, 443/open/tcp//tcpwrapped///
-# Nmap done at Mon Aug 25 17:38:29 2025 -- 1 IP address (1 host up) scanned in 36.12 seconds

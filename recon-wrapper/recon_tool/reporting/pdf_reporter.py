@@ -242,22 +242,41 @@ class PDFReportGenerator(BaseReportGenerator):
             subdomains = self.results.get('subdomains', [])
             subdomain_results = self.results.get('subdomain_enumeration', {})
             
-            if not subdomains and not subdomain_results:
+            # Handle different subdomain data structures
+            subdomain_list = []
+            if isinstance(subdomains, dict) and 'domains' in subdomains:
+                # Sample data structure
+                subdomain_list = subdomains.get('domains', [])
+            elif isinstance(subdomains, list):
+                # Direct list structure
+                subdomain_list = subdomains
+            elif subdomain_results and 'discovered_subdomains' in subdomain_results:
+                # Alternative structure
+                subdomain_list = subdomain_results.get('discovered_subdomains', [])
+            
+            if not subdomain_list and not subdomain_results:
                 section.append(Paragraph("No subdomains found.", styles['Normal']))
             else:
                 # Process basic subdomain list
-                if subdomains:
-                    section.append(Paragraph(f"Total subdomains found: <b>{len(subdomains)}</b>", styles['Normal']))
+                if subdomain_list:
+                    section.append(Paragraph(f"Total subdomains found: <b>{len(subdomain_list)}</b>", styles['Normal']))
                     section.append(Spacer(1, 10))
                     
                     # Create subdomains table (limit to first 50)
-                    display_subdomains = subdomains[:50]
+                    display_subdomains = subdomain_list[:50] if len(subdomain_list) >= 50 else subdomain_list
                     subdomain_data = [['Subdomain', 'Status']]
                     
                     for subdomain in display_subdomains:
                         if isinstance(subdomain, dict):
-                            domain = subdomain.get('domain', 'unknown')
-                            status = 'Live' if subdomain.get('live', False) else 'Unknown'
+                            # Handle both 'domain' and 'subdomain' keys
+                            domain = subdomain.get('domain') or subdomain.get('subdomain', 'unknown')
+                            status = subdomain.get('status', 'unknown')
+                            if status == 'live':
+                                status = 'Live'
+                            elif subdomain.get('live', False):
+                                status = 'Live'
+                            else:
+                                status = 'Found'
                         else:
                             domain = str(subdomain)
                             status = 'Found'
@@ -278,9 +297,9 @@ class PDFReportGenerator(BaseReportGenerator):
                         ]))
                         section.append(subdomain_table)
                     
-                    if len(subdomains) > 50:
+                    if len(subdomain_list) > 50:
                         section.append(Spacer(1, 10))
-                        section.append(Paragraph(f"<i>... and {len(subdomains) - 50} more subdomains</i>", styles['Normal']))
+                        section.append(Paragraph(f"<i>... and {len(subdomain_list) - 50} more subdomains</i>", styles['Normal']))
             
             section.append(Spacer(1, 20))
             
@@ -297,38 +316,104 @@ class PDFReportGenerator(BaseReportGenerator):
         try:
             section.append(Paragraph("Web Application Scan", heading_style))
             
-            web_results = self.results.get('web_scan', {})
+            web_results = self.results.get('web', {})
+            web_scan_results = self.results.get('web_scan', {})
             
-            if not web_results:
+            if not web_results and not web_scan_results:
                 section.append(Paragraph("No web application scan results available.", styles['Normal']))
             else:
-                for target, data in web_results.items():
-                    if isinstance(data, dict):
-                        section.append(Paragraph(f"Target: {target}", subheading_style))
+                # Process the actual scan structure first
+                if web_results:
+                    # Technologies from the new structure
+                    technologies = web_results.get('technologies', {})
+                    if technologies:
+                        section.append(Paragraph("<b>Technologies Detected:</b>", styles['Normal']))
+                        for url, tech_info in technologies.items():
+                            # Handle case where tech_info might be None
+                            if tech_info is not None and isinstance(tech_info, dict):
+                                server = tech_info.get('server', '')
+                                if server:
+                                    section.append(Paragraph(f"• Server: {server}", styles['Normal']))
+                                
+                                frameworks = tech_info.get('framework', [])
+                                if frameworks and isinstance(frameworks, list):
+                                    for fw in frameworks:
+                                        if fw and isinstance(fw, dict):
+                                            name = fw.get('name', '')
+                                            confidence = fw.get('confidence', 0)
+                                            section.append(Paragraph(f"• Framework: {name} ({confidence}% confidence)", styles['Normal']))
+                                
+                                languages = tech_info.get('language', [])
+                                if languages and isinstance(languages, list):
+                                    for lang in languages:
+                                        if lang and isinstance(lang, dict):
+                                            name = lang.get('name', '')
+                                            confidence = lang.get('confidence', 0)
+                                            section.append(Paragraph(f"• Language: {name} ({confidence}% confidence)", styles['Normal']))
+                        section.append(Spacer(1, 10))
+                    
+                    # Directories from the new structure
+                    directories = web_results.get('directories', [])
+                    if directories:
+                        section.append(Paragraph("<b>Directories Found:</b>", styles['Normal']))
+                        # Show first 20 directories
+                        display_dirs = directories[:20] if len(directories) > 20 else directories
+                        for dir_info in display_dirs:
+                            if isinstance(dir_info, dict):
+                                path = dir_info.get('path', 'unknown')
+                                url = dir_info.get('url', '')
+                                status = dir_info.get('status_code', '')
+                                section.append(Paragraph(f"• {path} (Status: {status})", styles['Normal']))
+                            else:
+                                section.append(Paragraph(f"• {dir_info}", styles['Normal']))
                         
-                        # Technologies
-                        technologies = data.get('technologies', [])
-                        if technologies:
-                            section.append(Paragraph("<b>Technologies Detected:</b>", styles['Normal']))
-                            tech_text = ", ".join(technologies[:10])  # Limit to first 10
-                            section.append(Paragraph(tech_text, styles['Normal']))
-                            section.append(Spacer(1, 10))
-                        
-                        # Directories
-                        directories = data.get('directories', [])
-                        if directories:
-                            section.append(Paragraph("<b>Directories Found:</b>", styles['Normal']))
-                            dir_text = "<br/>".join([f"• {d}" for d in directories[:20]])  # Limit to first 20
-                            section.append(Paragraph(dir_text, styles['Normal']))
-                            section.append(Spacer(1, 10))
-                        
-                        # Files
-                        files = data.get('files', [])
-                        if files:
-                            section.append(Paragraph("<b>Interesting Files:</b>", styles['Normal']))
-                            file_text = "<br/>".join([f"• {f}" for f in files[:15]])  # Limit to first 15
-                            section.append(Paragraph(file_text, styles['Normal']))
-                            section.append(Spacer(1, 10))
+                        if len(directories) > 20:
+                            section.append(Paragraph(f"<i>... and {len(directories) - 20} more directories</i>", styles['Normal']))
+                        section.append(Spacer(1, 10))
+                    
+                    # Security headers
+                    security_headers = web_results.get('security_headers', {})
+                    if security_headers:
+                        section.append(Paragraph("<b>Security Analysis:</b>", styles['Normal']))
+                        for url, headers in security_headers.items():
+                            # Handle case where headers might be None
+                            if headers is not None and isinstance(headers, dict):
+                                missing = headers.get('missing_headers', [])
+                                if missing:
+                                    section.append(Paragraph("Missing Security Headers:", styles['Normal']))
+                                    for header in missing:
+                                        section.append(Paragraph(f"• {header}", styles['Normal']))
+                        section.append(Spacer(1, 10))
+                
+                # Process legacy web_scan structure
+                if web_scan_results:
+                    for target, data in web_scan_results.items():
+                        if isinstance(data, dict):
+                            section.append(Paragraph(f"Target: {target}", subheading_style))
+                            
+                            # Technologies
+                            technologies = data.get('technologies', [])
+                            if technologies:
+                                section.append(Paragraph("<b>Technologies Detected:</b>", styles['Normal']))
+                                tech_text = ", ".join(technologies[:10])  # Limit to first 10
+                                section.append(Paragraph(tech_text, styles['Normal']))
+                                section.append(Spacer(1, 10))
+                            
+                            # Directories
+                            directories = data.get('directories', [])
+                            if directories:
+                                section.append(Paragraph("<b>Directories Found:</b>", styles['Normal']))
+                                dir_text = "<br/>".join([f"• {d}" for d in directories[:20]])  # Limit to first 20
+                                section.append(Paragraph(dir_text, styles['Normal']))
+                                section.append(Spacer(1, 10))
+                            
+                            # Files
+                            files = data.get('files', [])
+                            if files:
+                                section.append(Paragraph("<b>Interesting Files:</b>", styles['Normal']))
+                                file_text = "<br/>".join([f"• {f}" for f in files[:15]])  # Limit to first 15
+                                section.append(Paragraph(file_text, styles['Normal']))
+                                section.append(Spacer(1, 10))
             
             section.append(Spacer(1, 20))
             

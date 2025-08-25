@@ -207,6 +207,7 @@ Output Formats:
   json        Machine-readable JSON format
   markdown    Human-readable Markdown reports
   html        Professional HTML reports with charts
+  pdf         Professional PDF reports (requires reportlab)
   all         Generate all formats (default)
 
 Author: {AUTHOR}
@@ -304,7 +305,7 @@ For detailed documentation, visit: https://github.com/your-repo/recon-tool
     # Output options
     parser.add_argument(
         '--format',
-        choices=['json', 'markdown', 'html', 'all'],
+        choices=['json', 'markdown', 'html', 'pdf', 'all'],
         default='all',
         help='Report format (default: %(default)s)'
     )
@@ -770,7 +771,7 @@ def configure_scan_options(args) -> dict:
     # Report options
     if not args.no_report:
         options['generate_reports'] = True
-        options['report_formats'] = [args.format] if args.format != 'all' else ['json', 'markdown', 'html']
+        options['report_formats'] = [args.format] if args.format != 'all' else ['json', 'markdown', 'html', 'pdf']
     else:
         options['generate_reports'] = False
     

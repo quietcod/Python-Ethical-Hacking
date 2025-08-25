@@ -63,26 +63,64 @@ class BaseReportGenerator(ABC):
         }
         
         try:
-            # Subdomains
-            subdomains = self.results.get('subdomains', [])
-            stats['subdomains_found'] = len(subdomains) if subdomains else 0
+            # Subdomains - check the actual structure
+            subdomain_results = self.results.get('subdomain', {})
+            if isinstance(subdomain_results, dict):
+                stats['subdomains_found'] = subdomain_results.get('subdomains_found', 0)
+            else:
+                # Legacy structure
+                subdomains = self.results.get('subdomains', [])
+                stats['subdomains_found'] = len(subdomains) if subdomains else 0
             
-            # Open ports
-            stats['open_ports'] = self._count_open_ports()
+            # Open ports - check the actual structure
+            port_results = self.results.get('port', {})
+            if isinstance(port_results, dict):
+                stats['open_ports'] = port_results.get('open_ports', 0)
+            else:
+                # Fallback to counting manually
+                stats['open_ports'] = self._count_open_ports()
             
-            # Web technologies
-            stats['web_technologies'] = self._get_web_technologies()
+            # Web technologies - check the actual structure
+            web_results = self.results.get('web', {})
+            if isinstance(web_results, dict):
+                technologies = web_results.get('technologies', {})
+                tech_list = []
+                for url, tech_info in technologies.items():
+                    if isinstance(tech_info, dict):
+                        server = tech_info.get('server', '')
+                        if server:
+                            tech_list.append(server)
+                        
+                        frameworks = tech_info.get('framework', [])
+                        for fw in frameworks:
+                            if isinstance(fw, dict):
+                                tech_list.append(fw.get('name', ''))
+                        
+                        languages = tech_info.get('language', [])
+                        for lang in languages:
+                            if isinstance(lang, dict):
+                                tech_list.append(lang.get('name', ''))
+                
+                stats['web_technologies'] = list(filter(None, tech_list))
+            else:
+                # Legacy web technologies
+                stats['web_technologies'] = self._get_web_technologies()
             
-            # Directories and files
-            for tool_result in self.results.values():
-                if isinstance(tool_result, dict):
-                    if 'directories_found' in tool_result:
-                        dirs = tool_result['directories_found']
-                        stats['directories_found'] += len(dirs) if dirs else 0
-                    
-                    if 'files_found' in tool_result:
-                        files = tool_result['files_found']
-                        stats['files_found'] += len(files) if files else 0
+            # Directories and files - check the actual structure
+            if isinstance(web_results, dict):
+                directories = web_results.get('directories', [])
+                stats['directories_found'] = len(directories) if directories else 0
+            else:
+                # Legacy structure
+                for tool_result in self.results.values():
+                    if isinstance(tool_result, dict):
+                        if 'directories_found' in tool_result:
+                            dirs = tool_result['directories_found']
+                            stats['directories_found'] += len(dirs) if dirs else 0
+                        
+                        if 'files_found' in tool_result:
+                            files = tool_result['files_found']
+                            stats['files_found'] += len(files) if files else 0
             
             # Security issues and vulnerabilities
             stats['security_issues'] = self._count_security_issues()
