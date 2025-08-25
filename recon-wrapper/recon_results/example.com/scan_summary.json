@@ -1,0 +1,13 @@
+{
+  "target": "example.com",
+  "scan_id": "scan_20250825_173753_cfc0f933",
+  "status": "completed",
+  "start_time": "2025-08-25T17:37:53.220814",
+  "end_time": "2025-08-25T17:38:29.363873",
+  "tools_executed": 1,
+  "successful_tools": 1,
+  "failed_tools": 0,
+  "highlights": {
+    "open_ports": 2
+  }
+}

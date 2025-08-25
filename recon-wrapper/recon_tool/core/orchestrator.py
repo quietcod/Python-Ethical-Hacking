@@ -43,7 +43,7 @@ class ReconOrchestrator:
         self.output_dir = None
         self.scan_id = None
         
-        # Core components
+        # Core components with enhanced logging
         self.logger = None
         self.state_manager = None
         self.resource_monitor = None
@@ -54,6 +54,9 @@ class ReconOrchestrator:
         self.results = {}
         self.scanners = {}
         self.scan_status = "idle"
+        self.scan_start_time = None
+        self.scan_thread = None
+        self.stop_event = threading.Event()
         
         # Dashboard
         self.dashboard_server = None
@@ -161,51 +164,130 @@ class ReconOrchestrator:
                 raise ReconError("Scan already in progress")
             
             self.scan_status = "running"
-            self.logger.info(f"Starting {self.scan_type} scan for {self.target}")
+            self.scan_start_time = time.time()
+            
+            # Enhanced logging for scan start
+            tools = list(self.scanners.keys()) if hasattr(self, 'scanners') else []
+            self.logger.log_scan_start(self.target, self.scan_type, tools)
+            
+            # Log system info for debugging
+            self.logger.log_system_info()
             
             # Start scan in separate thread
-            self.scan_thread = threading.Thread(target=self._execute_scan)
+            self.scan_thread = threading.Thread(target=self._execute_scan, name=f"ScanThread-{self.scan_id}")
             self.scan_thread.start()
             
             return True
             
         except Exception as e:
-            self.logger.error(f"Failed to start scan: {str(e)}")
+            self.logger.error(f"Failed to start scan: {str(e)}", exception=e, 
+                            scan_id=self.scan_id, target=self.target)
             self.scan_status = "failed"
             return False
     
     def _execute_scan(self) -> None:
-        """Execute the actual scanning workflow"""
+        """Execute the actual scanning workflow with enhanced logging"""
         try:
             # Start resource monitoring
-            self.resource_monitor.start_monitoring()
+            if self.resource_monitor:
+                self.resource_monitor.start_monitoring()
+            
+            # Log scan execution start
+            phase_start_time = time.time()
             
             # Determine scan workflow based on scan type
             workflow = self._get_scan_workflow(self.scan_type)
+            total_phases = len(workflow)
+            
+            self.logger.info(f"Executing {total_phases} phases for {self.scan_type} scan", 
+                           scan_id=self.scan_id, total_phases=total_phases)
             
             # Execute workflow phases
-            for phase_name, phase_config in workflow.items():
+            for phase_index, (phase_name, phase_config) in enumerate(workflow.items(), 1):
                 if self.stop_event.is_set():
                     break
                 
-                self.logger.info(f"Starting phase: {phase_name}")
-                self._execute_phase(phase_name, phase_config)
+                # Enhanced phase logging
+                self.logger.log_phase_start(phase_name, 
+                                          phase_number=phase_index, 
+                                          total_phases=total_phases,
+                                          config=phase_config)
+                
+                phase_start = time.time()
+                try:
+                    self._execute_phase(phase_name, phase_config)
+                    phase_duration = time.time() - phase_start
+                    
+                    self.logger.log_phase_complete(phase_name, 
+                                                 duration=phase_duration,
+                                                 phase_number=phase_index)
+                    
+                except Exception as e:
+                    phase_duration = time.time() - phase_start
+                    self.logger.error(f"Phase {phase_name} failed after {phase_duration:.2f}s: {str(e)}", 
+                                    exception=e, phase=phase_name, duration=phase_duration)
+                    # Continue with other phases instead of failing completely
+                    continue
                 
                 # Save state after each phase
-                self.state_manager.save_state(self.results, phase_name)
+                if self.state_manager:
+                    self.state_manager.save_state(self.results, phase_name)
+                
+                # Log performance metrics periodically
+                self.logger.log_performance_metrics()
             
             # Generate reports
             if not self.stop_event.is_set():
-                self._generate_reports()
+                self.logger.log_phase_start("Report Generation")
+                report_start = time.time()
+                
+                try:
+                    self._generate_reports()
+                    report_duration = time.time() - report_start
+                    self.logger.log_phase_complete("Report Generation", duration=report_duration)
+                except Exception as e:
+                    report_duration = time.time() - report_start
+                    self.logger.error(f"Report generation failed after {report_duration:.2f}s: {str(e)}", 
+                                    exception=e)
             
+            # Calculate total scan duration
+            total_duration = time.time() - self.scan_start_time if self.scan_start_time else 0
+            
+            # Enhanced scan completion logging
             self.scan_status = "completed" if not self.stop_event.is_set() else "stopped"
-            self.logger.info(f"Scan {self.scan_status}")
+            
+            # Prepare results summary
+            results_summary = self._get_results_summary()
+            
+            self.logger.log_scan_complete(self.target, total_duration, results_summary)
+            
+            # Force final metrics log
+            self.logger.log_performance_metrics(force=True)
             
         except Exception as e:
-            self.logger.error(f"Scan execution failed: {str(e)}")
+            total_duration = time.time() - self.scan_start_time if self.scan_start_time else 0
+            self.logger.error(f"Scan execution failed after {total_duration:.2f}s: {str(e)}", 
+                            exception=e, scan_id=self.scan_id, target=self.target)
             self.scan_status = "failed"
         finally:
-            self.resource_monitor.stop_monitoring()
+            # Stop resource monitoring
+            if self.resource_monitor:
+                self.resource_monitor.stop_monitoring()
+    
+    def _get_results_summary(self) -> Dict[str, Any]:
+        """Get summary of scan results for logging"""
+        summary = {}
+        
+        if isinstance(self.results, dict):
+            for category, results in self.results.items():
+                if isinstance(results, list):
+                    summary[f"{category}_count"] = len(results)
+                elif isinstance(results, dict):
+                    summary[f"{category}_count"] = len(results)
+                else:
+                    summary[category] = str(results)[:100]  # Truncate long strings
+        
+        return summary
     
     def _get_scan_workflow(self, scan_type: str) -> Dict[str, Dict]:
         """Get workflow configuration based on scan type"""

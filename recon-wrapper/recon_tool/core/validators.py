@@ -4,6 +4,7 @@ Validation functions for user inputs and configuration
 """
 
 import re
+import socket
 import ipaddress
 from typing import List, Dict, Any, Optional, Union
 from urllib.parse import urlparse
@@ -13,21 +14,190 @@ from .exceptions import ValidationError
 
 
 class TargetValidator:
-    """Simple target validator class"""
+    """Enhanced target validator class with strict validation"""
     
-    def validate_domain(self, domain: str) -> bool:
-        """Validate domain format"""
+    def __init__(self, check_dns_resolution: bool = True, allow_private_ips: bool = True):
+        """
+        Initialize validator with configuration options
+        
+        Args:
+            check_dns_resolution: Whether to verify domain DNS resolution
+            allow_private_ips: Whether to allow private IP addresses
+        """
+        self.check_dns_resolution = check_dns_resolution
+        self.allow_private_ips = allow_private_ips
+        
+        # Valid TLDs (common ones - could be expanded)
+        self.valid_tlds = {
+            'com', 'org', 'net', 'edu', 'gov', 'mil', 'int', 'biz', 'info', 'name',
+            'pro', 'museum', 'coop', 'travel', 'jobs', 'mobi', 'tel', 'asia', 'cat',
+            'post', 'xxx', 'aero', 'arpa', 'local', 'localhost', 'test', 'example',
+            # Country codes (sample)
+            'us', 'uk', 'ca', 'au', 'de', 'fr', 'jp', 'cn', 'ru', 'br', 'in',
+            'io', 'co', 'me', 'tv', 'cc', 'ly', 'sh', 'tk', 'ml', 'ga', 'cf'
+        }
+    
+    def validate_domain(self, domain, check_dns=None):
+        """
+        Validate domain format and optionally check DNS resolution.
+        
+        Args:
+            domain (str): Domain to validate
+            check_dns (bool): Whether to perform DNS resolution check (overrides instance setting)
+            
+        Returns:
+            bool: True if valid, False otherwise
+            
+        Raises:
+            ValueError: With specific validation error message
+        """
+        if check_dns is None:
+            check_dns = self.check_dns_resolution
+            
         if not domain:
+            raise ValueError("Domain cannot be empty")
+        
+        # Remove leading/trailing whitespace
+        domain = domain.strip()
+        
+        # Handle trailing dot (FQDN format) - remove it for validation
+        if domain.endswith('.'):
+            domain = domain[:-1]
+        
+        # Basic length check
+        if len(domain) > 253:
+            raise ValueError("Domain name too long (max 253 characters)")
+        
+        if len(domain) < 4:  # Minimum like "a.co"
+            raise ValueError("Domain name too short (minimum 4 characters)")
+        
+        # Check for invalid characters at start/end
+        if domain.startswith('-') or domain.endswith('-'):
+            raise ValueError("Domain cannot start or end with hyphen")
+        
+        if domain.startswith('.'):
+            raise ValueError("Domain cannot start with dot")
+        
+        # Check for consecutive dots
+        if '..' in domain:
+            raise ValueError("Domain cannot contain consecutive dots")
+        
+        # Split into labels and validate each
+        labels = domain.split('.')
+        
+        # Must have at least 2 labels (domain.tld)
+        if len(labels) < 2:
+            raise ValueError("Domain must have at least one dot (e.g., example.com)")
+        
+        # Validate each label
+        for i, label in enumerate(labels):
+            if not label:
+                raise ValueError("Domain labels cannot be empty")
+            
+            if len(label) > 63:
+                raise ValueError(f"Domain label '{label}' too long (max 63 characters)")
+            
+            if label.startswith('-') or label.endswith('-'):
+                raise ValueError(f"Domain label '{label}' cannot start or end with hyphen")
+            
+            # Check for valid characters (letters, numbers, hyphens)
+            if not re.match(r'^[a-zA-Z0-9-]+$', label):
+                raise ValueError(f"Domain label '{label}' contains invalid characters")
+        
+        # Validate TLD (last label)
+        tld = labels[-1].lower()
+        
+        # TLD cannot be purely numeric
+        if tld.isdigit():
+            raise ValueError("Top-level domain cannot be purely numeric")
+        
+        # TLD must contain at least one letter
+        if not re.search(r'[a-zA-Z]', tld):
+            raise ValueError("Top-level domain must contain at least one letter")
+        
+        # TLD length check (2-63 characters)
+        if len(tld) < 2:
+            raise ValueError("Top-level domain too short (minimum 2 characters)")
+        
+        # Optional DNS resolution check
+        if check_dns:
+            try:
+                socket.gethostbyname(domain)
+            except socket.gaierror:
+                raise ValueError(f"Domain '{domain}' does not resolve to an IP address")
+        
+        return True
+
+    def _validate_domain_label(self, label: str, is_tld: bool = False) -> bool:
+        """Validate individual domain label"""
+        if not label or len(label) > 63:
             return False
         
-        # Basic domain validation regex
-        domain_pattern = r'^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$'
-        return bool(re.match(domain_pattern, domain)) and len(domain) <= 253
+        # Labels cannot start or end with hyphens
+        if label.startswith('-') or label.endswith('-'):
+            return False
+        
+        # Check character set
+        if not re.match(r'^[a-zA-Z0-9-]+$', label):
+            return False
+        
+        # TLD cannot be all numeric
+        if is_tld and label.isdigit():
+            return False
+        
+        return True
+    
+    def _validate_tld(self, tld: str) -> bool:
+        """Validate top-level domain"""
+        if not tld:
+            return False
+        
+        # TLD must be at least 2 characters
+        if len(tld) < 2:
+            return False
+        
+        # TLD cannot be all numeric
+        if tld.isdigit():
+            return False
+        
+        # Check against known TLD list (expandable)
+        # For production, you might want to use a comprehensive TLD list
+        if len(tld) <= 4:  # Most common TLDs are 2-4 chars
+            return tld in self.valid_tlds
+        
+        # Allow longer TLDs if they follow naming rules
+        return re.match(r'^[a-zA-Z]{2,}$', tld) is not None
+    
+    def _check_dns_resolution(self, domain: str) -> bool:
+        """Check if domain resolves via DNS"""
+        try:
+            # Try to resolve the domain
+            socket.gethostbyname(domain)
+            return True
+        except socket.gaierror:
+            # Domain doesn't resolve
+            return False
+        except Exception:
+            # Other DNS errors - be permissive
+            return True
     
     def validate_ip(self, ip: str) -> bool:
-        """Validate IP address format"""
+        """Enhanced IP address validation"""
         try:
-            ipaddress.ip_address(ip)
+            ip_obj = ipaddress.ip_address(ip)
+            
+            # Check if private IPs are allowed
+            if not self.allow_private_ips and ip_obj.is_private:
+                return False
+            
+            # Reject loopback for scanning (except for testing)
+            if ip_obj.is_loopback and str(ip_obj) not in ['127.0.0.1', '::1']:
+                return False
+            
+            # Reject multicast and reserved
+            if ip_obj.is_multicast or ip_obj.is_reserved:
+                return False
+            
             return True
         except ValueError:
             return False
@@ -80,8 +250,8 @@ class InputValidator:
             raise ValidationError(f"Invalid IP address: {str(e)}", field="target", value=ip)
     
     @staticmethod
-    def _validate_domain(domain: str) -> Dict[str, Any]:
-        """Validate domain name"""
+    def _validate_domain(domain: str, check_dns: bool = True) -> Dict[str, Any]:
+        """Enhanced domain name validation"""
         if not domain or len(domain) > 253:
             raise ValidationError("Domain name too long or empty", field="target", value=domain)
         
@@ -89,25 +259,62 @@ class InputValidator:
         if domain.endswith('.'):
             domain = domain[:-1]
         
-        # Check if it looks like a domain
-        domain_pattern = re.compile(
-            r'^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$'
-        )
+        domain = domain.lower()
         
-        if not domain_pattern.match(domain):
+        # Create validator instance for detailed validation
+        validator = TargetValidator(check_dns_resolution=check_dns)
+        
+        # Use the enhanced validation
+        if not validator.validate_domain(domain):
+            # Provide specific error messages based on common issues
+            labels = domain.split('.')
+            
+            if len(labels) < 2 and domain not in ['localhost']:
+                raise ValidationError(
+                    "Domain must have a valid TLD (e.g., example.com, not just 'example')", 
+                    field="target", 
+                    value=domain
+                )
+            
+            if any(len(label) > 63 for label in labels):
+                raise ValidationError("Domain label too long (max 63 characters)", field="target", value=domain)
+            
+            if any(label.startswith('-') or label.endswith('-') for label in labels):
+                raise ValidationError("Domain labels cannot start or end with hyphens", field="target", value=domain)
+            
+            if len(labels) >= 2 and labels[-1].isdigit():
+                raise ValidationError("Top-level domain cannot be all numeric", field="target", value=domain)
+            
+            if len(labels) >= 2 and len(labels[-1]) < 2:
+                raise ValidationError("Top-level domain must be at least 2 characters", field="target", value=domain)
+            
+            # Check for DNS resolution (only if enabled)
+            if check_dns:
+                try:
+                    socket.gethostbyname(domain)
+                    dns_resolves = True
+                except socket.gaierror:
+                    dns_resolves = False
+                
+                if not dns_resolves and domain not in ['localhost', 'test.local']:
+                    raise ValidationError(
+                        f"Domain '{domain}' does not resolve via DNS. Use --skip-dns-check to bypass this validation.",
+                        field="target", 
+                        value=domain
+                    )
+            
+            # Generic fallback error
             raise ValidationError("Invalid domain name format", field="target", value=domain)
         
-        # Check for at least one dot (except for single words like localhost)
         labels = domain.split('.')
-        if len(labels) < 2 and domain not in ['localhost']:
-            raise ValidationError("Domain must have at least one dot", field="target", value=domain)
-        
         return {
             "type": "domain",
-            "value": domain.lower(),
+            "value": domain,
             "valid": True,
             "labels": labels,
-            "tld": labels[-1] if len(labels) > 1 else None
+            "tld": labels[-1] if len(labels) > 1 else None,
+            "subdomain": '.'.join(labels[:-1]) if len(labels) > 1 else None,
+            "apex_domain": '.'.join(labels[-2:]) if len(labels) > 1 else domain
         }
     
     @staticmethod

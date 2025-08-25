@@ -186,6 +186,34 @@ class StateError(ReconToolError):
         self.state = state
 
 
+class TargetProcessingError(ReconToolError):
+    """Raised when target processing fails"""
+    
+    def __init__(self, message: str, target: str = None, processing_stage: str = None, **kwargs):
+        details = kwargs.copy()
+        if target:
+            details["target"] = target
+        if processing_stage:
+            details["processing_stage"] = processing_stage
+        super().__init__(message, "TARGET_PROCESSING_ERROR", details)
+        self.target = target
+        self.processing_stage = processing_stage
+
+
+class ResultProcessingError(ReconToolError):
+    """Raised when result processing fails"""
+    
+    def __init__(self, message: str, tool_name: str = None, processing_stage: str = None, **kwargs):
+        details = kwargs.copy()
+        if tool_name:
+            details["tool_name"] = tool_name
+        if processing_stage:
+            details["processing_stage"] = processing_stage
+        super().__init__(message, "RESULT_PROCESSING_ERROR", details)
+        self.tool_name = tool_name
+        self.processing_stage = processing_stage
+
+
 class DependencyError(ReconToolError):
     """Raised when there's a dependency error"""
     

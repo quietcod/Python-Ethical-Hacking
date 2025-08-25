@@ -105,11 +105,59 @@ DEFAULT_CONFIG = {
     
     "logging": {
         "level": "INFO",
-        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        
+        # File Logging Settings
         "file_logging": True,
         "console_logging": True,
+        
+        # Log Rotation Settings
         "max_file_size": "10MB",
-        "backup_count": 5
+        "backup_count": 5,
+        "max_logs_days": 30,  # Auto-cleanup logs older than 30 days
+        
+        # Log Formats
+        "format": "%(asctime)s - %(name)s - %(levelname)s - [%(context)s:%(lineno)d] - %(message)s",
+        "console_format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "json_format": True,  # Enable structured JSON logging
+        "include_context": True,  # Include function/module context
+        
+        # Performance Metrics
+        "performance_logging": True,
+        "metrics_interval": 60,  # Log metrics every 60 seconds
+        "track_memory": True,
+        "track_cpu": True,
+        "track_timing": True,
+        
+        # Error Context
+        "enhanced_errors": True,
+        "include_stack_traces": True,
+        "error_context_lines": 5,
+        
+        # Log Files Structure
+        "log_files": {
+            "main": "recon_tool.log",
+            "errors": "errors.log",
+            "structured": "structured.json",
+            "performance": "performance.log",
+            "debug": "debug.log"
+        },
+        
+        # Log Levels per Component
+        "component_levels": {
+            "orchestrator": "INFO",
+            "tools": "INFO",
+            "reporting": "INFO",
+            "config": "WARNING",
+            "utils": "WARNING"
+        },
+        
+        # Advanced Features
+        "log_compression": True,  # Compress rotated logs
+        "remote_logging": False,  # For future syslog/remote logging
+        "log_filtering": {
+            "suppress_warnings": [],  # List of warning patterns to suppress
+            "highlight_patterns": []   # Patterns to highlight in logs
+        }
     },
     
     "performance": {

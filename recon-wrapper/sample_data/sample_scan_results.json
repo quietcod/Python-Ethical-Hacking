@@ -1,0 +1,403 @@
+{
+  "sample_scan_results": {
+    "scan_id": "scan_20250825_143022",
+    "target": "example.com",
+    "status": "completed",
+    "start_time": "2025-08-25T14:30:22",
+    "end_time": "2025-08-25T14:32:45",
+    "scan_duration": 143,
+    "tools_used": ["port_scanner", "subdomain_enum", "web_scanner", "ssl_analyzer", "osint_gatherer"],
+    
+    "results": {
+      "port_scan": {
+        "total_ports_scanned": 1000,
+        "open_ports": [22, 80, 443, 8080, 8443],
+        "services": [
+          {
+            "port": 22,
+            "service": "ssh",
+            "version": "OpenSSH 8.2p1 Ubuntu-4ubuntu0.5",
+            "state": "open",
+            "banner": "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5"
+          },
+          {
+            "port": 80,
+            "service": "http",
+            "version": "nginx 1.18.0",
+            "state": "open",
+            "banner": "Server: nginx/1.18.0 (Ubuntu)"
+          },
+          {
+            "port": 443,
+            "service": "https",
+            "version": "nginx 1.18.0",
+            "state": "open",
+            "banner": "Server: nginx/1.18.0 (Ubuntu)"
+          },
+          {
+            "port": 8080,
+            "service": "http-proxy",
+            "version": "Apache httpd 2.4.41",
+            "state": "open",
+            "banner": "Server: Apache/2.4.41 (Ubuntu)"
+          },
+          {
+            "port": 8443,
+            "service": "ssl/http",
+            "version": "Apache httpd 2.4.41",
+            "state": "open",
+            "banner": "Server: Apache/2.4.41 (Ubuntu)"
+          }
+        ]
+      },
+      
+      "subdomains": {
+        "total_found": 12,
+        "live_count": 8,
+        "dead_count": 4,
+        "domains": [
+          {
+            "subdomain": "www.example.com",
+            "ip_address": "93.184.216.34",
+            "status": "live",
+            "response_time": 0.156,
+            "http_status": 200
+          },
+          {
+            "subdomain": "mail.example.com",
+            "ip_address": "93.184.216.35",
+            "status": "live",
+            "response_time": 0.203,
+            "http_status": 200
+          },
+          {
+            "subdomain": "blog.example.com",
+            "ip_address": "93.184.216.36",
+            "status": "live",
+            "response_time": 0.178,
+            "http_status": 200
+          },
+          {
+            "subdomain": "api.example.com",
+            "ip_address": "93.184.216.37",
+            "status": "live",
+            "response_time": 0.234,
+            "http_status": 200
+          },
+          {
+            "subdomain": "admin.example.com",
+            "ip_address": "93.184.216.38",
+            "status": "live",
+            "response_time": 0.445,
+            "http_status": 403
+          },
+          {
+            "subdomain": "dev.example.com",
+            "ip_address": "93.184.216.39",
+            "status": "live",
+            "response_time": 0.567,
+            "http_status": 401
+          },
+          {
+            "subdomain": "test.example.com",
+            "ip_address": "93.184.216.40",
+            "status": "live",
+            "response_time": 0.123,
+            "http_status": 200
+          },
+          {
+            "subdomain": "staging.example.com",
+            "ip_address": "93.184.216.41",
+            "status": "live",
+            "response_time": 0.289,
+            "http_status": 200
+          },
+          {
+            "subdomain": "old.example.com",
+            "ip_address": null,
+            "status": "dead",
+            "response_time": null,
+            "http_status": null
+          },
+          {
+            "subdomain": "legacy.example.com",
+            "ip_address": null,
+            "status": "dead",
+            "response_time": null,
+            "http_status": null
+          },
+          {
+            "subdomain": "beta.example.com",
+            "ip_address": null,
+            "status": "dead",
+            "response_time": null,
+            "http_status": null
+          },
+          {
+            "subdomain": "archive.example.com",
+            "ip_address": null,
+            "status": "dead",
+            "response_time": null,
+            "http_status": null
+          }
+        ]
+      },
+      
+      "web_scan": {
+        "target_url": "https://example.com",
+        "technologies": [
+          {
+            "name": "nginx",
+            "version": "1.18.0",
+            "category": "Web Server"
+          },
+          {
+            "name": "PHP",
+            "version": "7.4.28",
+            "category": "Programming Language"
+          },
+          {
+            "name": "MySQL",
+            "version": "8.0.28",
+            "category": "Database"
+          },
+          {
+            "name": "jQuery",
+            "version": "3.6.0",
+            "category": "JavaScript Library"
+          },
+          {
+            "name": "Bootstrap",
+            "version": "5.1.3",
+            "category": "CSS Framework"
+          },
+          {
+            "name": "WordPress",
+            "version": "6.1.2",
+            "category": "CMS"
+          }
+        ],
+        "directories": [
+          {
+            "path": "/admin",
+            "status": 403,
+            "size": 1024,
+            "discovered_by": "directory_bruteforce"
+          },
+          {
+            "path": "/api",
+            "status": 200,
+            "size": 256,
+            "discovered_by": "directory_bruteforce"
+          },
+          {
+            "path": "/uploads",
+            "status": 403,
+            "size": 512,
+            "discovered_by": "directory_bruteforce"
+          },
+          {
+            "path": "/backup",
+            "status": 403,
+            "size": 0,
+            "discovered_by": "directory_bruteforce"
+          },
+          {
+            "path": "/wp-admin",
+            "status": 200,
+            "size": 4096,
+            "discovered_by": "cms_detection"
+          },
+          {
+            "path": "/wp-content",
+            "status": 200,
+            "size": 2048,
+            "discovered_by": "cms_detection"
+          }
+        ],
+        "forms": [
+          {
+            "action": "/login",
+            "method": "POST",
+            "inputs": ["username", "password"],
+            "csrf_protection": true
+          },
+          {
+            "action": "/contact",
+            "method": "POST",
+            "inputs": ["name", "email", "message"],
+            "csrf_protection": false
+          }
+        ],
+        "cookies": [
+          {
+            "name": "PHPSESSID",
+            "secure": true,
+            "httponly": true,
+            "samesite": "Strict"
+          },
+          {
+            "name": "wp_session",
+            "secure": false,
+            "httponly": false,
+            "samesite": "None"
+          }
+        ],
+        "headers": {
+          "server": "nginx/1.18.0 (Ubuntu)",
+          "x-powered-by": "PHP/7.4.28",
+          "x-frame-options": "SAMEORIGIN",
+          "x-content-type-options": "nosniff",
+          "strict-transport-security": "max-age=31536000; includeSubDomains"
+        }
+      },
+      
+      "ssl_scan": {
+        "certificate": {
+          "subject": "CN=example.com",
+          "issuer": "C=US, O=Let's Encrypt, CN=R3",
+          "serial_number": "03:B2:A1:C4:E5:F6:D7:8A:9B:0C:1D:2E:3F:40:51:62",
+          "valid_from": "2025-05-25T12:00:00Z",
+          "valid_until": "2025-11-25T12:00:00Z",
+          "days_until_expiry": 92,
+          "signature_algorithm": "SHA256withRSA",
+          "key_size": 2048,
+          "san_domains": ["example.com", "www.example.com", "mail.example.com"]
+        },
+        "ssl_labs_grade": "A",
+        "supported_protocols": [
+          {"protocol": "TLS 1.2", "supported": true},
+          {"protocol": "TLS 1.3", "supported": true},
+          {"protocol": "SSL 3.0", "supported": false},
+          {"protocol": "TLS 1.0", "supported": false},
+          {"protocol": "TLS 1.1", "supported": false}
+        ],
+        "cipher_suites": [
+          {
+            "name": "TLS_AES_256_GCM_SHA384",
+            "strength": "strong",
+            "key_exchange": "ECDHE",
+            "encryption": "AES_256_GCM",
+            "mac": "SHA384"
+          },
+          {
+            "name": "TLS_CHACHA20_POLY1305_SHA256",
+            "strength": "strong",
+            "key_exchange": "ECDHE",
+            "encryption": "CHACHA20_POLY1305",
+            "mac": "SHA256"
+          }
+        ],
+        "vulnerabilities": [
+          {
+            "name": "Weak Cipher Suite",
+            "severity": "medium",
+            "description": "Server supports cipher suites with weak encryption",
+            "cve": "CVE-2016-2183",
+            "impact": "Medium"
+          }
+        ]
+      },
+      
+      "osint": {
+        "dns_records": {
+          "A": ["93.184.216.34"],
+          "AAAA": ["2606:2800:220:1:248:1893:25c8:1946"],
+          "MX": ["10 mail.example.com"],
+          "NS": ["ns1.example.com", "ns2.example.com"],
+          "TXT": [
+            "v=spf1 include:_spf.example.com ~all",
+            "google-site-verification=abc123def456ghi789",
+            "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com"
+          ],
+          "CNAME": ["www.example.com"]
+        },
+        "whois": {
+          "registrar": "Example Registrar Inc.",
+          "creation_date": "1995-08-14",
+          "expiration_date": "2026-08-13",
+          "last_updated": "2024-07-15",
+          "registrant_org": "Internet Assigned Numbers Authority",
+          "registrant_country": "US",
+          "name_servers": ["ns1.example.com", "ns2.example.com"],
+          "status": ["clientDeleteProhibited", "clientTransferProhibited"]
+        },
+        "geolocation": {
+          "ip": "93.184.216.34",
+          "country": "United States",
+          "region": "Virginia",
+          "city": "Norwell",
+          "latitude": 42.1596,
+          "longitude": -70.8217,
+          "isp": "Edgecast",
+          "organization": "Verizon Digital Media Services"
+        },
+        "social_media": [
+          {
+            "platform": "Twitter",
+            "url": "https://twitter.com/example",
+            "followers": 15420,
+            "verified": true
+          },
+          {
+            "platform": "LinkedIn",
+            "url": "https://linkedin.com/company/example",
+            "followers": 8760,
+            "verified": true
+          }
+        ],
+        "email_addresses": [
+          "admin@example.com",
+          "contact@example.com",
+          "info@example.com",
+          "support@example.com"
+        ]
+      }
+    },
+    
+    "summary": {
+      "risk_score": 6.5,
+      "risk_level": "medium",
+      "total_ports": 5,
+      "open_ports": 5,
+      "total_subdomains": 12,
+      "live_subdomains": 8,
+      "vulnerabilities_found": 1,
+      "technologies_detected": 6,
+      "ssl_grade": "A",
+      "scan_duration": 143,
+      "scan_efficiency": 0.85
+    },
+    
+    "recommendations": [
+      {
+        "type": "security",
+        "priority": "high",
+        "title": "Update SSL Configuration",
+        "description": "Remove support for weak cipher suites to improve SSL security",
+        "action": "Configure server to only support strong cipher suites"
+      },
+      {
+        "type": "security",
+        "priority": "medium",
+        "title": "Secure Administrative Interfaces",
+        "description": "Administrative interfaces are accessible and may pose security risks",
+        "action": "Implement IP whitelisting or VPN access for admin areas"
+      },
+      {
+        "type": "security",
+        "priority": "medium",
+        "title": "Cookie Security",
+        "description": "Some cookies lack security flags",
+        "action": "Ensure all cookies have Secure and HttpOnly flags set"
+      },
+      {
+        "type": "performance",
+        "priority": "low",
+        "title": "Optimize Response Times",
+        "description": "Some subdomains have slow response times",
+        "action": "Review server performance and optimize slow endpoints"
+      }
+    ]
+  }
+}

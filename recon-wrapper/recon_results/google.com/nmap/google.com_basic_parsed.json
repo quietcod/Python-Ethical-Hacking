@@ -1,0 +1,58 @@
+{
+  "target": "google.com",
+  "scan_type": "basic",
+  "timestamp": "Mon Aug 25 13:19:44 2025",
+  "hosts": [
+    {
+      "address": "172.217.26.46",
+      "address_type": "ipv4",
+      "status": "up",
+      "hostnames": [
+        {
+          "name": "google.com",
+          "type": "user"
+        },
+        {
+          "name": "nrt12s17-in-f46.1e100.net",
+          "type": "PTR"
+        }
+      ],
+      "ports": [
+        {
+          "port": "80",
+          "protocol": "tcp",
+          "state": "open",
+          "reason": "syn-ack",
+          "service": {
+            "name": "tcpwrapped",
+            "product": "",
+            "version": "",
+            "extrainfo": ""
+          }
+        },
+        {
+          "port": "443",
+          "protocol": "tcp",
+          "state": "open",
+          "reason": "syn-ack",
+          "service": {
+            "name": "tcpwrapped",
+            "product": "",
+            "version": "",
+            "extrainfo": ""
+          }
+        }
+      ],
+      "os": {},
+      "scripts": []
+    }
+  ],
+  "summary": {
+    "total_hosts": 1,
+    "hosts_up": 1,
+    "total_ports": 2,
+    "open_ports": 2,
+    "filtered_ports": 0,
+    "closed_ports": 0
+  }
+}

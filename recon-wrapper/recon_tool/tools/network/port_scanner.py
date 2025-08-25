@@ -236,12 +236,12 @@ class PortScanner:
             # Masscan command with rate limiting for safety
             cmd = [
                 'masscan',
-                target,
                 '-p', port_range,
                 '--rate', '1000',  # Conservative rate
                 '--output-format', 'json',
                 '--output-filename', str(output_file),
-                '--open-only'
+                '--open-only',
+                target  # Target should come last
             ]
             
             # Run masscan with timeout
