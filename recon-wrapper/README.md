@@ -42,13 +42,43 @@ source recon-env/bin/activate
 python recon-wrapper/recon_all_in_one.py [options]
 
 
-# � Recon All-in-One - Advanced Reconnaissance Framework
+# 🎯 Recon All-in-One - Advanced Reconnaissance Framework
 
 A comprehensive, next-generation reconnaissance tool designed for penetration testing, security research, and authorized security assessments. This tool consolidates **42 enhanced methods** across **10 major capability areas** into a single, powerful Python framework.
 
 ## 🎯 Overview
 
 **Recon All-in-One** is an enterprise-grade reconnaissance framework that integrates modern security tools and techniques for comprehensive target assessment. Built for security professionals, penetration testers, and bug bounty hunters.
+
+## 🚀 NEW: Interactive Mode
+
+**🎯 Interactive Mode** provides a user-friendly, guided interface for configuring and running reconnaissance scans. Perfect for both beginners and experienced users!
+
+### Quick Start with Interactive Mode
+```bash
+# Launch interactive mode (recommended)
+./recon_launcher.py
+
+# Or use the direct command
+python3 -m recon_tool.main --interactive
+```
+
+### Interactive Features
+- **🎯 Guided Configuration**: Step-by-step scan setup
+- **🔧 Multiple Scan Modes**: Quick, Full, Passive, and Custom scans
+- **🛠️ Tool Selection**: Choose from 25+ integrated security tools
+- **⚙️ Advanced Options**: Threading, timeouts, rate limiting
+- **📋 Visual Interface**: Emoji-rich, intuitive menus
+- **✅ Validation**: Real-time input validation and error handling
+
+### Demo & Documentation
+```bash
+# Try the interactive demo
+./interactive_demo.py
+
+# View comprehensive guide
+cat INTERACTIVE_MODE_GUIDE.md
+```
 
 ### 🏆 Key Highlights
 - **42 enhanced methods** across 4 core scanning classes

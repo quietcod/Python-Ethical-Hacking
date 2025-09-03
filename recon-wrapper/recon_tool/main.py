@@ -44,10 +44,17 @@ try:
     from core.enhanced_validators import EnhancedInputValidator, validate_tools_available
     from core.target_processor import TargetProcessor, process_targets_simple
     from config import ConfigManager
+    from .interactive_menu import InteractiveMenu
     CORE_AVAILABLE = True
 except ImportError as e:
-    print(f"Warning: Core modules not fully available: {e}")
-    CORE_AVAILABLE = False
+    try:
+        # Fallback import for interactive menu
+        from interactive_menu import InteractiveMenu
+        CORE_AVAILABLE = False
+    except ImportError:
+        print(f"Warning: Core modules not fully available: {e}")
+        CORE_AVAILABLE = False
+        InteractiveMenu = None
 
 
 def print_banner():
@@ -183,6 +190,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
 Examples:
+  %(prog)s --interactive                           # Launch interactive mode (recommended)
   %(prog)s --domain example.com                    # Quick domain scan
   %(prog)s --ip 192.168.1.1 --full                # Full IP scan
   %(prog)s --targets-file targets.txt              # Multiple targets
@@ -224,8 +232,15 @@ For detailed documentation, visit: https://github.com/your-repo/recon-tool
         version=f'%(prog)s {VERSION}\n{DESCRIPTION}\nAuthor: {AUTHOR}'
     )
     
-    # Target specification (mutually exclusive)
-    target_group = parser.add_mutually_exclusive_group(required=True)
+    # Interactive mode
+    parser.add_argument(
+        '--interactive', '-I',
+        action='store_true',
+        help='Launch interactive mode for guided scan configuration'
+    )
+    
+    # Target specification (mutually exclusive) - not required if interactive mode
+    target_group = parser.add_mutually_exclusive_group(required=False)
     target_group.add_argument(
         '--domain', '-d',
         metavar='DOMAIN',
@@ -435,6 +450,16 @@ def setup_logging(args) -> logging.Logger:
 def validate_arguments(args) -> None:
     """Enhanced argument validation with comprehensive checks"""
     errors = []
+    
+    # Skip target validation if interactive mode is enabled
+    if hasattr(args, 'interactive') and args.interactive:
+        if CORE_AVAILABLE and InteractiveMenu is None:
+            errors.append("Interactive mode not available - missing interactive_menu module")
+        return  # Skip most validation for interactive mode
+    
+    # Ensure target is specified if not in interactive mode
+    if not (args.domain or args.ip or args.targets_file):
+        errors.append("Target specification required (use --domain, --ip, or --targets-file) or use --interactive mode")
     
     if CORE_AVAILABLE:
         # Initialize enhanced validator
@@ -778,6 +803,127 @@ def configure_scan_options(args) -> dict:
     return options
 
 
+def convert_interactive_config_to_args(interactive_config: dict, original_args, parser):
+    """Convert interactive configuration to args object"""
+    import argparse
+    
+    # Create new args object from interactive config
+    new_args = argparse.Namespace()
+    
+    # Copy all original args first
+    for key, value in vars(original_args).items():
+        setattr(new_args, key, value)
+    
+    # Override with interactive config
+    target_type = interactive_config.get('target_type')
+    target_value = interactive_config.get('target_value')
+    
+    # Set target
+    if target_type == 'domain':
+        new_args.domain = target_value
+        new_args.ip = None
+        new_args.targets_file = None
+    elif target_type == 'ip':
+        new_args.ip = target_value
+        new_args.domain = None
+        new_args.targets_file = None
+    elif target_type == 'file':
+        new_args.targets_file = Path(target_value)
+        new_args.domain = None
+        new_args.ip = None
+    
+    # Set output directory
+    if interactive_config.get('output_dir'):
+        new_args.output_dir = Path(interactive_config['output_dir'])
+    
+    # Set scan mode
+    scan_mode = interactive_config.get('scan_mode', 'normal')
+    new_args.full = scan_mode == 'full'
+    new_args.quick = scan_mode == 'quick'
+    new_args.passive = scan_mode == 'passive'
+    
+    # Set tools
+    if interactive_config.get('selected_tools'):
+        # Map interactive tool IDs to CLI tool names
+        tool_mapping = {
+            'port': 'port',
+            'network': 'network',
+            'dns': 'dns',
+            'service': 'port',
+            'network_security': 'network',
+            'network_all': ['port', 'network', 'dns'],
+            'web_tech': 'web',
+            'directory': 'directory',
+            'web_vuln': 'web',
+            'ssl': 'ssl',
+            'api': 'api',
+            'headers': 'web',
+            'web_all': ['web', 'directory', 'ssl', 'api'],
+            'subdomain': 'subdomain',
+            'search_intel': 'osint',
+            'social_intel': 'osint',
+            'cert_transparency': 'ssl',
+            'breach_check': 'osint',
+            'wayback': 'osint',
+            'osint_all': ['subdomain', 'osint'],
+            'vulnerability': 'vulnerability',
+            'auth_test': 'vulnerability',
+            'input_validation': 'vulnerability',
+            'config_analysis': 'vulnerability',
+            'compliance': 'vulnerability',
+            'security_all': ['vulnerability'],
+            'screenshot': 'screenshot',
+            'visual_analysis': 'screenshot',
+            'reporting': 'web',
+            'visual_all': ['screenshot']
+        }
+        
+        tools = []
+        for tool_id in interactive_config['selected_tools']:
+            if tool_id in tool_mapping:
+                mapped = tool_mapping[tool_id]
+                if isinstance(mapped, list):
+                    tools.extend(mapped)
+                else:
+                    tools.append(mapped)
+        
+        new_args.tools = list(set(tools)) if tools else None
+    
+    # Set advanced options
+    advanced_opts = interactive_config.get('advanced_options', {})
+    if 'threads' in advanced_opts:
+        new_args.threads = advanced_opts['threads']
+    if 'timeout' in advanced_opts:
+        new_args.timeout = advanced_opts['timeout']
+    if 'verbose' in advanced_opts:
+        new_args.verbose = 3 if advanced_opts['verbose'] else 0
+    if 'rate_limit' in advanced_opts:
+        new_args.rate_limit = advanced_opts['rate_limit']
+    
+    # Set defaults for any missing attributes
+    defaults = {
+        'threads': 10,
+        'timeout': 300,
+        'rate_limit': 1.0,
+        'verbose': 0,
+        'quiet': False,
+        'debug': False,
+        'dry_run': False,
+        'format': 'all',
+        'no_report': False,
+        'exclude_tools': None,
+        'log_file': None,
+        'skip_dns_check': False,
+        'resume': None
+    }
+    
+    for key, default_value in defaults.items():
+        if not hasattr(new_args, key):
+            setattr(new_args, key, default_value)
+    
+    return new_args
+
+
 def check_scan_dependencies(scan_options: dict, logger) -> None:
     """Check that required tools are available for the planned scan"""
     if not CORE_AVAILABLE:
@@ -906,6 +1052,24 @@ def main():
         
         # Validate arguments
         validate_arguments(args)
+        
+        # Handle interactive mode
+        if hasattr(args, 'interactive') and args.interactive:
+            if InteractiveMenu is None:
+                print("❌ Interactive mode not available - missing interactive_menu module")
+                return 1
+            
+            logger.info("Launching interactive mode...")
+            menu = InteractiveMenu()
+            interactive_config = menu.run_interactive_mode()
+            
+            if interactive_config is None:
+                print("👋 Interactive mode cancelled or failed")
+                return 0
+            
+            # Convert interactive config to args format
+            args = convert_interactive_config_to_args(interactive_config, args, parser)
+            logger.info("Interactive configuration applied")
         
         # Initialize configuration manager
         if CORE_AVAILABLE:
