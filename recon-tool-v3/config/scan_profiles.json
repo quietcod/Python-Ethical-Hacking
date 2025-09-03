@@ -1,0 +1,42 @@
+{
+  "scan_profiles": {
+    "quick": {
+      "name": "Quick Scan",
+      "description": "Fast reconnaissance (5-10 minutes)",
+      "tools": ["nmap", "subfinder"],
+      "nmap_args": ["-T4", "--top-ports", "1000"],
+      "timeout": 600
+    },
+    
+    "full": {
+      "name": "Full Scan", 
+      "description": "Comprehensive assessment (15-30 minutes)",
+      "tools": ["nmap", "masscan", "subfinder", "nikto", "gobuster", "sslscan"],
+      "nmap_args": ["-sS", "-sV", "-O", "-A"],
+      "timeout": 1800
+    },
+    
+    "passive": {
+      "name": "Passive Scan",
+      "description": "OSINT only, no direct target contact", 
+      "tools": ["subfinder"],
+      "passive_only": true,
+      "timeout": 300
+    },
+    
+    "web_focused": {
+      "name": "Web Application Focus",
+      "description": "Web application security assessment",
+      "tools": ["nikto", "gobuster", "sslscan", "nuclei"],
+      "timeout": 1200
+    },
+    
+    "network_focused": {
+      "name": "Network Focus", 
+      "description": "Network infrastructure assessment",
+      "tools": ["nmap", "masscan"],
+      "nmap_args": ["-sS", "-sV", "-O", "-A", "-p-"],
+      "timeout": 2400
+    }
+  }
+}

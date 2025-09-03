@@ -1,0 +1,33 @@
+{
+  "_comment": "Test Fixtures - Sample data for testing",
+  "test_domains": [
+    "example.com",
+    "test.example.com", 
+    "subdomain.example.com"
+  ],
+  
+  "test_ips": [
+    "192.168.1.1",
+    "10.0.0.1",
+    "127.0.0.1"
+  ],
+  
+  "mock_scan_results": {
+    "nmap": {
+      "open_ports": [80, 443, 22],
+      "services": {
+        "80": "http",
+        "443": "https", 
+        "22": "ssh"
+      }
+    },
+    
+    "subfinder": {
+      "subdomains": [
+        "www.example.com",
+        "api.example.com",
+        "admin.example.com"
+      ]
+    }
+  }
+}
