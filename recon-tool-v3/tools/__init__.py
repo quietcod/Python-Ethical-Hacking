@@ -59,6 +59,13 @@ TOOL_REGISTRY = {
             "class": "HttpxProbe",
             "category": "web_discovery"
         },
+        "curl_probe": {
+            "name": "Curl Probe",
+            "description": "HTTP probing using curl",
+            "module": "tools.curl_probe",
+            "class": "CurlProbe",
+            "category": "web_discovery"
+        },
         "katana": {
             "name": "Katana",
             "description": "Web crawler and endpoint discovery",
@@ -168,7 +175,7 @@ TOOL_REGISTRY = {
 # Scan Profile Presets
 SCAN_PROFILES = {
     "quick": {
-        "tools": ["nmap", "subfinder", "httpx"],
+        "tools": ["nmap", "subfinder", "curl_probe"],
         "description": "Fast reconnaissance (5-10 minutes)"
     },
     "full": {

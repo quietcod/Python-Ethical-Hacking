@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconnaissance Report - {{ target }}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .severity-critical { color: #dc3545; }
+        .severity-high { color: #fd7e14; }
+        .severity-medium { color: #ffc107; }
+        .severity-low { color: #198754; }
+        .severity-info { color: #0dcaf0; }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .summary-card {
+            border-left: 4px solid #667eea;
+        }
+        
+        .timeline-item {
+            border-left: 3px solid #e9ecef;
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .recommendation-high { border-left: 4px solid #dc3545; }
+        .recommendation-medium { border-left: 4px solid #ffc107; }
+        .recommendation-low { border-left: 4px solid #198754; }
+        .recommendation-info { border-left: 4px solid #0dcaf0; }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .finding-item {
+            transition: all 0.3s ease;
+        }
+        
+        .finding-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .print-only {
+            display: none;
+        }
+        
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .card { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-search"></i> Recon-Tool-v3
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    Report Generated: {{ scan_date }}
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card summary-card">
+                    <div class="card-header">
+                        <h1 class="mb-0">
+                            <i class="fas fa-bullseye"></i> 
+                            Reconnaissance Report: {{ target }}
+                        </h1>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <div class="stats-number">{{ summary.total_subdomains }}</div>
+                                <div class="text-muted">Subdomains</div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="stats-number">{{ summary.total_vulnerabilities }}</div>
+                                <div class="text-muted">Vulnerabilities</div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="stats-number">{{ summary.total_ports_found }}</div>
+                                <div class="text-muted">Open Ports</div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="stats-number">{{ summary.total_urls_discovered }}</div>
+                                <div class="text-muted">URLs Found</div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Risk Level:</strong> 
+                                <span class="badge 
+                                    {% if summary.risk_level == 'HIGH' %}bg-danger
+                                    {% elif summary.risk_level == 'MEDIUM' %}bg-warning
+                                    {% elif summary.risk_level == 'LOW' %}bg-success
+                                    {% else %}bg-info{% endif %}">
+                                    {{ summary.risk_level }}
+                                </span>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Tools Used:</strong> {{ summary.tools_used | join(', ') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Vulnerability Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        {{ charts.vulnerability_chart | safe }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Tool Coverage</h5>
+                    </div>
+                    <div class="card-body">
+                        {{ charts.tool_usage_chart | safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Findings Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="section-header">
+                    <h2 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Security Findings</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vulnerabilities -->
+        {% if findings.critical or findings.high or findings.medium or findings.low %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-bug"></i> Vulnerabilities</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Critical Vulnerabilities -->
+                        {% if findings.critical %}
+                        <h6 class="severity-critical"><i class="fas fa-exclamation-circle"></i> Critical ({{ findings.critical | length }})</h6>
+                        {% for vuln in findings.critical %}
+                        <div class="finding-item card mb-2">
+                            <div class="card-body py-2">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <strong>{{ vuln.title }}</strong><br>
+                                        <small class="text-muted">{{ vuln.description }}</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <small>{{ vuln.host }}:{{ vuln.port }}</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge bg-danger">{{ vuln.tool }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+
+                        <!-- High Vulnerabilities -->
+                        {% if findings.high %}
+                        <h6 class="severity-high"><i class="fas fa-exclamation-triangle"></i> High ({{ findings.high | length }})</h6>
+                        {% for vuln in findings.high %}
+                        <div class="finding-item card mb-2">
+                            <div class="card-body py-2">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <strong>{{ vuln.title }}</strong><br>
+                                        <small class="text-muted">{{ vuln.description }}</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <small>{{ vuln.host }}:{{ vuln.port }}</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge bg-warning">{{ vuln.tool }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+
+                        <!-- Medium Vulnerabilities -->
+                        {% if findings.medium %}
+                        <h6 class="severity-medium"><i class="fas fa-exclamation"></i> Medium ({{ findings.medium | length }})</h6>
+                        {% for vuln in findings.medium %}
+                        <div class="finding-item card mb-2">
+                            <div class="card-body py-2">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <strong>{{ vuln.title }}</strong><br>
+                                        <small class="text-muted">{{ vuln.description }}</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <small>{{ vuln.host }}:{{ vuln.port }}</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge bg-info">{{ vuln.tool }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Subdomains -->
+        {% if findings.subdomains %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-sitemap"></i> Discovered Subdomains ({{ findings.subdomains | length }})</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for subdomain in findings.subdomains %}
+                            <div class="col-md-4 mb-2">
+                                <div class="finding-item card">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-globe"></i> {{ subdomain.subdomain }}</span>
+                                            <span class="badge bg-primary">{{ subdomain.tool }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Open Ports -->
+        {% if findings.ports %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-network-wired"></i> Open Ports ({{ findings.ports | length }})</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Port</th>
+                                        <th>Service</th>
+                                        <th>State</th>
+                                        <th>Version</th>
+                                        <th>Tool</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for port in findings.ports %}
+                                    <tr>
+                                        <td><strong>{{ port.port }}</strong></td>
+                                        <td>{{ port.service }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if port.state == 'open' %}bg-success
+                                                {% elif port.state == 'closed' %}bg-danger
+                                                {% else %}bg-warning{% endif %}">
+                                                {{ port.state }}
+                                            </span>
+                                        </td>
+                                        <td>{{ port.version }}</td>
+                                        <td><span class="badge bg-info">{{ port.tool }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recommendations -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="section-header">
+                    <h2 class="mb-0"><i class="fas fa-lightbulb"></i> Security Recommendations</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                {% for recommendation in recommendations %}
+                <div class="card mb-3 recommendation-{{ recommendation.priority.lower() }}">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <span class="badge 
+                                    {% if recommendation.priority == 'HIGH' %}bg-danger
+                                    {% elif recommendation.priority == 'MEDIUM' %}bg-warning
+                                    {% elif recommendation.priority == 'LOW' %}bg-success
+                                    {% else %}bg-info{% endif %} fs-6">
+                                    {{ recommendation.priority }}
+                                </span>
+                            </div>
+                            <div class="col-md-11">
+                                <h6 class="card-title">{{ recommendation.title }}</h6>
+                                <p class="card-text">{{ recommendation.description }}</p>
+                                <p class="card-text"><strong>Action:</strong> {{ recommendation.action }}</p>
+                                <small class="text-muted">Category: {{ recommendation.category }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        {% if timeline %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="section-header">
+                    <h2 class="mb-0"><i class="fas fa-clock"></i> Scan Timeline</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        {{ charts.timeline_chart | safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <p class="mb-0">
+                            <strong>Report Generated by Recon-Tool-v3</strong><br>
+                            <small class="text-muted">
+                                Scan ID: {{ metadata.scan_id }} | Version: {{ metadata.version }} | 
+                                Generated on: {{ scan_date }}
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Print functionality -->
+    <script>
+        function printReport() {
+            window.print();
+        }
+        
+        // Add print button
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbar = document.querySelector('.navbar .container');
+            const printBtn = document.createElement('button');
+            printBtn.className = 'btn btn-outline-light btn-sm no-print';
+            printBtn.innerHTML = '<i class="fas fa-print"></i> Print Report';
+            printBtn.onclick = printReport;
+            navbar.appendChild(printBtn);
+        });
+    </script>
+</body>
+</html>
