@@ -11,7 +11,7 @@ interface WebSocketContextType {
   lastMessage: WebSocketMessage | null
 }
 
-const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined)
+export const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined)
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null)

@@ -87,7 +87,7 @@ TOOL_REGISTRY = {
             "name": "Subfinder",
             "description": "Subdomain enumeration tool",
             "module": "tools.subfinder",
-            "class": "SubfinderEnumerator",
+            "class": "SubfinderScanner",
             "category": "subdomain_enum"
         },
         "amass": {
