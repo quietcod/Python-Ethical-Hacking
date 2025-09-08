@@ -231,7 +231,7 @@ def execute_scan(args):
             'target': args.target,
             'profile': args.profile,
             'tools': args.tools.split(',') if args.tools else None,
-            'output_dir': args.output,
+            'output_dir': args.output or './results',
             'output_format': args.format,
             'verbose': args.verbose
         }

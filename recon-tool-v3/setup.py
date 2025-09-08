@@ -53,7 +53,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "recon-tool=main:main",
+            "recon-tool-v3=main:main",
         ],
     },
     include_package_data=True,

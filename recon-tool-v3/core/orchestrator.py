@@ -231,7 +231,7 @@ class ReconOrchestrator:
     
     def _generate_output(self, results: Dict, scan_params: Dict) -> None:
         """Generate output files in specified format"""
-        output_dir = scan_params.get('output_dir', './results')
+        output_dir = scan_params.get('output_dir') or './results'
         output_format = scan_params.get('output_format', 'json')
         
         # Create output directory
