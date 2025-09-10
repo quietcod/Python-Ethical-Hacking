@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 """
 HTML Report Generator - Clean Architecture
-Interactive web-based reporting
+Static HTML reports for web viewing (legacy support)
 """
 
 class HTMLReporter:
-    """Clean HTML report generation"""
+    """Clean HTML report generation for static reports only"""
     
     def __init__(self, config):
-        # TODO: Initialize HTML reporter
-        pass
+        # Initialize HTML reporter for static reports
+        self.config = config
     
-    def generate_interactive_report(self, results):
-        """Generate interactive HTML report"""
-        # TODO: Implement interactive HTML
-        pass
-    
-    def generate_dashboard(self, results):
-        """Generate scanning dashboard"""
-        # TODO: Implement dashboard
+    def generate_static_report(self, results):
+        """Generate static HTML report for web viewing"""
+        # TODO: Implement static HTML report generation
+        # This is kept for legacy compatibility
+        # Primary output format is PDF
         pass

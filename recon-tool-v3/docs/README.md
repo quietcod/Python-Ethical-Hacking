@@ -138,9 +138,9 @@ recon-tool-v3/
 - Compliance-ready format
 
 ### HTML Reports  
-- Interactive web interface
-- Real-time filtering
-- Professional dashboard
+- Static web interface
+- Professional formatting
+- Legacy support for web viewing
 
 ### JSON Output
 - Machine-readable format
