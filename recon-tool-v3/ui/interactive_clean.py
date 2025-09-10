@@ -12,7 +12,7 @@ from datetime import datetime
 from core.orchestrator import ReconOrchestrator
 
 
-def run_interactive_mode():
+def interactive_main():
     """Launch the interactive terminal interface"""
     try:
         return curses.wrapper(main_tui)
@@ -113,23 +113,16 @@ class ReconTUI:
     
     def _create_windows(self):
         """Create the window layout - LinUtil style"""
-        # Ensure minimum terminal size
-        if self.height < 10 or self.width < 40:
-            raise Exception(f"Terminal too small ({self.height}x{self.width}). Minimum: 10x40")
-        
         # Calculate dimensions
-        left_width = max(20, self.width // 3)  # Ensure minimum width
+        left_width = self.width // 3
         right_width = self.width - left_width - 1
         
-        # Ensure windows fit
-        win_height = max(8, self.height - 2)  # Minimum window height
-        
         # Create left panel (tools)
-        self.left_win = curses.newwin(win_height, left_width, 1, 0)
+        self.left_win = curses.newwin(self.height - 2, left_width, 1, 0)
         self.left_win.box()
         
         # Create right panel (scan types/output)
-        self.right_win = curses.newwin(win_height, right_width, 1, left_width + 1)
+        self.right_win = curses.newwin(self.height - 2, right_width, 1, left_width + 1)
         self.right_win.box()
         
         # Header and footer
@@ -139,19 +132,14 @@ class ReconTUI:
     def _draw_header(self):
         """Draw the header"""
         self.header_win.clear()
-        title = "Recon Tool v3"
+        title = "Recon Tool v3 - Interactive Mode"
         target_info = f" | Target: {self.target or 'Not Set'}"
-        header_text = (title + target_info)[:self.width]
+        header_text = title + target_info
         
-        try:
-            self.header_win.addstr(0, 0, header_text, curses.color_pair(1))
-        except curses.error:
-            # Fallback for very small terminals
-            try:
-                self.header_win.addstr(0, 0, title[:self.width])
-            except curses.error:
-                pass
-                
+        if len(header_text) > self.width:
+            header_text = header_text[:self.width-3] + "..."
+            
+        self.header_win.addstr(0, 0, header_text[:self.width], curses.color_pair(1))
         self.header_win.refresh()
     
     def _draw_left_panel(self):
@@ -160,31 +148,22 @@ class ReconTUI:
         self.left_win.box()
         
         # Panel title
-        self.left_win.addstr(1, 2, "Tools", curses.A_BOLD)
-        
-        # Calculate how many tools we can show
-        max_tools = (self.height - 6)  # Leave space for title and borders
-        start_idx = max(0, self.current_selection - max_tools + 1) if self.current_selection >= max_tools else 0
+        self.left_win.addstr(1, 2, "Available Tools", curses.A_BOLD)
         
         # Draw tools list
-        for i, tool in enumerate(self.tools[start_idx:start_idx + max_tools]):
-            actual_idx = start_idx + i
+        for i, tool in enumerate(self.tools):
             y = i + 3
-            
             if y >= self.height - 4:  # Leave space for box
                 break
                 
-            try:
-                if self.selected_tool is None and actual_idx == self.current_selection:
-                    # Highlight current selection
-                    self.left_win.addstr(y, 2, f"> {tool}"[:20], curses.color_pair(2))
-                elif tool == self.selected_tool:
-                    # Show selected tool
-                    self.left_win.addstr(y, 2, f"* {tool}"[:20], curses.color_pair(4))
-                else:
-                    self.left_win.addstr(y, 2, f"  {tool}"[:20])
-            except curses.error:
-                pass  # Skip if doesn't fit
+            if self.selected_tool is None and i == self.current_selection:
+                # Highlight current selection
+                self.left_win.addstr(y, 2, f"> {tool}", curses.color_pair(2))
+            elif tool == self.selected_tool:
+                # Show selected tool
+                self.left_win.addstr(y, 2, f"* {tool}", curses.color_pair(4))
+            else:
+                self.left_win.addstr(y, 2, f"  {tool}")
         
         self.left_win.refresh()
     
@@ -312,18 +291,15 @@ class ReconTUI:
         self.footer_win.clear()
         
         if self.scan_running:
-            footer_text = " Scanning... [c] Clear [q] Quit"
+            footer_text = " Scan in progress... [c] Clear [q] Quit [h] Help"
         else:
-            footer_text = "[Up/Down] Nav [Enter] Select [t] Target [s] Start [q] Quit"
+            footer_text = "[Up/Down] Navigate [Enter] Select [t] Target [s] Start [c] Clear [h] Help [q] Quit"
         
         # Truncate if too long
-        footer_text = footer_text[:self.width]
-        
-        try:
-            self.footer_win.addstr(0, 0, footer_text)
-        except curses.error:
-            pass
+        if len(footer_text) > self.width:
+            footer_text = footer_text[:self.width-3] + "..."
             
+        self.footer_win.addstr(0, 0, footer_text[:self.width])
         self.footer_win.refresh()
     
     def _refresh_all(self):
@@ -583,4 +559,4 @@ class ReconTUI:
 
 
 if __name__ == "__main__":
-    run_interactive_mode()
+    interactive_main()

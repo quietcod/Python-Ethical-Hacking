@@ -12,10 +12,12 @@ pyyaml>=6.0
 # Terminal UI and formatting
 rich>=13.0.0
 colorama>=0.4.6
+# Note: curses is built-in to Python on Linux/macOS
 
-# PDF generation
+# PDF generation and charts
 reportlab>=4.0.0
 fpdf2>=2.7.0
+matplotlib>=3.5.0
 
 # HTML templating
 jinja2>=3.1.0

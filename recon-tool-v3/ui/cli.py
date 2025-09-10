@@ -12,16 +12,23 @@ def create_parser():
     """Create and configure argument parser"""
     parser = argparse.ArgumentParser(
         prog='recon-tool-v3',
-        description='Professional reconnaissance toolkit with modular design',
+        description='Professional reconnaissance toolkit with modular design\n\n' +
+                   'Default: Interactive LinUtil-style interface\n' +
+                   'Use --cli flag for command-line mode',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s -t example.com --profile quick
-  %(prog)s -t example.com --tools nmap,subfinder
-  %(prog)s -t example.com --interactive
-  %(prog)s --list-tools
+  %(prog)s                          # Launch interactive interface (default)
+  %(prog)s --cli -t example.com --profile quick    # CLI mode
+  %(prog)s --cli -t example.com --tools nmap,subfinder
+  %(prog)s --cli --list-tools
         """
     )
+    
+    # Add CLI mode flag
+    parser.add_argument('-c', '--cli',
+                       action='store_true',
+                       help='Use command-line interface mode')
     
     # Target specification
     parser.add_argument('-t', '--target', 
@@ -54,10 +61,10 @@ Examples:
                        action='store_true',
                        help='Skip report generation, save raw results only')
     
-    # Mode options
+    # Mode options (legacy compatibility)
     parser.add_argument('-I', '--interactive',
                        action='store_true',
-                       help='Run in interactive mode')
+                       help='Launch interactive mode (default behavior)')
     
     parser.add_argument('--list-tools',
                        action='store_true', 
@@ -105,18 +112,21 @@ def run_cli_mode(args):
     if parsed_args.cleanup_reports:
         return cleanup_reports(parsed_args.cleanup_reports)
     
-    # Switch to interactive mode if requested
+    # Handle interactive mode request (legacy compatibility)
     if parsed_args.interactive:
+        print("ℹ️  Interactive mode is now the default behavior.")
+        print("   Simply run: python main.py")
         from ui.interactive import run_interactive_mode
         return run_interactive_mode()
     
-    # Validate required arguments
+    # Validate required arguments for CLI operations
     if not parsed_args.target:
         print("❌ Error: Target is required for CLI mode")
-        print("Use --help for usage information or --interactive for interactive mode")
+        print("💡 Tip: Run without --cli flag to use the interactive interface")
+        print("   Or use: python main.py --cli --help for CLI options")
         return 1
     
-    # Execute scan
+    # Execute scan in CLI mode
     return execute_scan(parsed_args)
 
 def list_tools():
