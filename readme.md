@@ -42,9 +42,9 @@ To set up and install the PythonPentestToolkit, follow these steps:
    python src/python_pentest_tool/recon/network_scanner.py -t <target_ip>
    ```
 
-```
 ## 🎯 Usage
 
+```
 ### Basic Usage
 ```python
 # Network Scanner
